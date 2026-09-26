@@ -1,5 +1,6 @@
 from __future__ import annotations
-
+from sqlalchemy import text
+from app.db import SessionLocal
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
