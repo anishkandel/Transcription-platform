@@ -3,7 +3,7 @@ const TOKEN_KEY = "kk_access_token";
 
 export function getAccessToken(): string | null {
   try {
-    return sessionStorage.getItem(TOKEN_KEY);
+    return localStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
   }
@@ -11,8 +11,8 @@ export function getAccessToken(): string | null {
 
 export function setAccessToken(token: string | null) {
   try {
-    if (token) sessionStorage.setItem(TOKEN_KEY, token);
-    else sessionStorage.removeItem(TOKEN_KEY);
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
   } catch {
     // ignore storage failures
   }
