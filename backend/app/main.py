@@ -76,3 +76,21 @@ async def session_ws(session_id: str, websocket: WebSocket) -> None:
             await websocket.receive_text()
     except WebSocketDisconnect:
         await hub.disconnect(session_id, websocket)
+
+
+@app.get("/debug/db")
+def debug_db():
+    db = SessionLocal()
+    try:
+        row = db.execute(text("""
+            SELECT
+                current_database() AS database,
+                current_user AS user,
+                inet_server_addr()::text AS server_addr,
+                inet_server_port() AS server_port,
+                (SELECT COUNT(*) FROM sessions) AS session_count
+        """)).mappings().one()
+
+        return dict(row)
+    finally:
+        db.close()
