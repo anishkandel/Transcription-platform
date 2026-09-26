@@ -10,6 +10,7 @@ import {
   deleteZoomMeeting,
   disconnectZoom,
   getZoomAuthStatus,
+  listSessions,
   listZoomMeetings,
   startZoomOAuth,
 } from "../api";
@@ -163,18 +164,38 @@ export default function ZoomPage() {
     }
   }
 
-  async function onOpenSession(meeting: ZoomMeeting) {
-    setBusy(true);
-    setError(null);
-    try {
-      const session = await createSession(meeting.topic, "zoom", String(meeting.id), "zoom");
-      navigate(`/sessions/${session.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to open session");
-    } finally {
-      setBusy(false);
+ async function onOpenSession(meeting: ZoomMeeting) {
+  setBusy(true);
+  setError(null);
+
+  try {
+    const sessions = await listSessions();
+
+    const existingSession = sessions.find(
+      (session) =>
+        session.platform === "zoom" &&
+        String(session.meeting_id) === String(meeting.id)
+    );
+
+    if (existingSession) {
+      navigate(`/sessions/${existingSession.id}`);
+      return;
     }
+
+    const session = await createSession(
+      meeting.topic,
+      "zoom",
+      String(meeting.id),
+      "zoom"
+    );
+
+    navigate(`/sessions/${session.id}`);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Failed to open session");
+  } finally {
+    setBusy(false);
   }
+}
 
   return (
     <div>
