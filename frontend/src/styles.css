@@ -6844,3 +6844,16 @@ a {
     text-align: center;
   }
 }
+
+.transcript-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 14px 24px 16px;
+  margin: 0;
+
+  border-top: 1px solid #e6efec;
+  color: #5f716d;
+  font-size: 12px;
+}
