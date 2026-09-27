@@ -309,6 +309,22 @@ export default function SessionPage() {
     );
   }
 
+  function formatProvider(provider: string) {
+  if (provider === "papa_reo_streaming_live_rtms") {
+    return "Papa Reo Streaming";
+  }
+
+  if (provider === "papa_reo_streaming") {
+    return "Papa Reo Streaming";
+  }
+
+  if (provider === "papa_reo_standard") {
+    return "Papa Reo Standard";
+  }
+
+  return provider.replaceAll("_", " ");
+}
+
   return (
     <div>
       <p className="crumb">
@@ -319,7 +335,7 @@ export default function SessionPage() {
         <div>
           <h1>{session.title}</h1>
           <p>
-            Status: {session.status} · Platform: {session.platform} · Provider: {provider}
+            Status: {session.status} · Platform: {session.platform} · Provider: {formatProvider(provider)}
             {session.meeting_id ? ` · Meeting ID: ${session.meeting_id}` : ""}
           </p>
         </div>
@@ -436,7 +452,7 @@ export default function SessionPage() {
             <span>
               <Mic size={12} /> Provider
             </span>
-            <strong>{provider}</strong>
+            <strong>{formatProvider(provider)}</strong>
           </div>
           <div className="detail">
             <span>
