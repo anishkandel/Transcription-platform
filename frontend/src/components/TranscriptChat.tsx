@@ -242,12 +242,6 @@ export default function TranscriptChat({
                         <strong>
                           Segment {index + 1}
                         </strong>
-
-                        {isLatest && isLive ? (
-                          <span className="current-badge">
-                            Live
-                          </span>
-                        ) : null}
                       </div>
 
                       <span className="provider-label">
@@ -300,21 +294,13 @@ export default function TranscriptChat({
           TRANSCRIPT COUNT
       ====================================================== */}
 
-      {lines.length > 0 ? (
+           {lines.length > 0 ? (
         <div className="transcript-footer">
           <span>
-            {lines.length}{" "}
-            {lines.length === 1 ? "segment" : "segments"}
+            {lines.length} {lines.length === 1 ? "segment" : "segments"}
+            {" · "}
+            {isLive ? "Receiving transcript" : "Transcript ready"}
           </span>
-
-          {isLive ? (
-            <span className="footer-live">
-              <span />
-              Receiving transcript
-            </span>
-          ) : (
-            <span>Transcript ready</span>
-          )}
         </div>
       ) : null}
     </div>
