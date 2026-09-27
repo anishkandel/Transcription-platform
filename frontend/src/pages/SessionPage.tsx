@@ -322,7 +322,7 @@ export default function SessionPage() {
     return "Papa Reo Standard";
   }
 
-  return provider.replaceAll("_", " ");
+  return provider.replace(/_/g, " ");
 }
 
   return (
