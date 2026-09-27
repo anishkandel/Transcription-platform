@@ -332,7 +332,8 @@ def bind_rtms_session(
     record.meeting_id = str(meeting_id)
     record.platform = "zoom"
     record.source = "zoom"
-    record.status = "waiting_rtms"
+    if record.status != "completed":
+        record.status = "waiting_rtms"
     db.commit()
     rtms_session_registry.bind(payload.session_id, meeting_id=str(meeting_id))
     print(
