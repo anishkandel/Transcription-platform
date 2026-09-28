@@ -6857,3 +6857,68 @@ a {
   color: #5f716d;
   font-size: 12px;
 }
+
+
+.meeting-when-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.8fr) 100px 16px 100px 90px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.meeting-when-row input,
+.meeting-when-row select {
+  width: 100%;
+  min-height: 48px;
+}
+
+.meeting-when-row > span {
+  text-align: center;
+  font-weight: 600;
+  color: #475569;
+}
+
+
+.duration-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.duration-row select {
+  width: 150px;
+  min-height: 48px;
+}
+
+.duration-row span {
+  font-size: 15px;
+  color: #334155;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .meeting-when-row {
+    grid-template-columns: 1fr 90px 12px 90px 80px;
+  }
+}
+
+@media (max-width: 650px) {
+  .meeting-when-row {
+    grid-template-columns: 1fr;
+  }
+
+  .meeting-when-row > span {
+    display: none;
+  }
+
+  .duration-row {
+    flex-wrap: wrap;
+  }
+
+  .duration-row select {
+    flex: 1;
+    min-width: 120px;
+  }
+}
