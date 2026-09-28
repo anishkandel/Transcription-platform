@@ -620,9 +620,24 @@ function formatMeetingDate(value?: string | null) {
         </div>
       )}
 
-      {!isCompleted ? (
-        <div className="transcription-options">
+      {!isCompleted && session.platform !== "zoom" ?  (
           <div className="transcription-option">
+            <div className="live-session-toolbar"><div>
+              <strong>Live Zoom transcription</strong>
+              <span>
+                Transcript updates will appear automatically while the meeting is running.
+              </span>
+            </div>
+        
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => void onLiveRtms()}
+            >
+              Retry connection
+            </button>
+          </div>
+        ) : null}
             <div className="transcription-option-icon upload-icon">
               <Upload size={22} />
             </div>
