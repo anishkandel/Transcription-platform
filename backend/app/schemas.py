@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Any, Literal
 
@@ -10,6 +11,10 @@ class SessionCreate(BaseModel):
     meeting_id: str | None = None
     source: Literal["manual", "zoom", "mock_rtms"] = "manual"
 
+    scheduled_start: datetime | None = None
+    duration_minutes: int | None = None
+    participants: list[str] = Field(default_factory=list)
+
 
 class SessionOut(BaseModel):
     id: str
@@ -19,6 +24,11 @@ class SessionOut(BaseModel):
     platform: str
     meeting_id: str | None = None
     source: str = "manual"
+
+    scheduled_start: datetime | None = None
+    duration_minutes: int | None = None
+    participants: list[str] = Field(default_factory=list)
+
     created_at: datetime
     updated_at: datetime
 
