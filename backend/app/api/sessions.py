@@ -57,7 +57,7 @@ def _session_out(record: SessionRecord) -> SessionOut:
 def _get_session_transcript(
     db: Session,
     session_id: str,
-) -> tuple[str, str, bool, datetime | None]:
+) -> tuple[str, str, bool, datetime | None, float | None]:
     transcripts = list(
         db.scalars(
             select(TranscriptRecord)
@@ -67,7 +67,7 @@ def _get_session_transcript(
     )
 
     if not transcripts:
-        return "", "none", False, None
+        return "", "none", False, None, None
 
     rtms_providers = {
         "papa_reo_streaming_live_rtms",
@@ -97,14 +97,29 @@ def _get_session_transcript(
         provider = " + ".join(providers)
         is_final = all(transcript.is_final for transcript in rtms_transcripts)
         updated_at = max(
-            (
-                transcript.updated_at or transcript.created_at
-                for transcript in rtms_transcripts
-            ),
-            default=None,
-        )
-
-        return combined_text, provider, is_final, updated_at
+        (
+            transcript.updated_at or transcript.created_at
+            for transcript in rtms_transcripts
+        ),
+        default=None,
+    )
+    
+    duration_seconds = max(
+        (
+            transcript.duration_seconds
+            for transcript in rtms_transcripts
+            if transcript.duration_seconds is not None
+        ),
+        default=None,
+    )
+    
+    return (
+        combined_text,
+        provider,
+        is_final,
+        updated_at,
+        duration_seconds,
+    )
 
     transcript = transcripts[-1]
 
@@ -271,7 +286,7 @@ def get_transcript(
 ) -> TranscriptOut:
     session = _get_owned_session(db, session_id, user)
 
-    text, provider, is_final, updated_at = _get_session_transcript(
+    text, provider, is_final, updated_at, duration_seconds = _get_session_transcript(
         db,
         session_id,
     )
@@ -281,7 +296,7 @@ def get_transcript(
         text=text,
         provider=provider,
         is_final=is_final,
-        duration_seconds=None,
+        duration_seconds=duration_seconds,
         updated_at=updated_at or session.updated_at,
     )
 
@@ -296,7 +311,7 @@ def export_transcript(
 ):
     session = _get_owned_session(db, session_id, user)
 
-    text, provider, is_final, updated_at = _get_session_transcript(
+    text, provider, is_final, updated_at, duration_seconds = _get_session_transcript(
         db,
         session_id,
     )
