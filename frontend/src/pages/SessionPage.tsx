@@ -407,6 +407,7 @@ export default function SessionPage() {
       setError(
         "This session has no Zoom meeting ID"
       );
+
       return;
     }
 
@@ -473,38 +474,41 @@ export default function SessionPage() {
     return value.replace(/_/g, " ");
   }
 
-function formatMeetingDate(value?: string | null) {
-  if (!value) return "Not available";
+  function formatMeetingDate(
+    value?: string | null
+  ) {
+    if (!value) return "Not available";
 
-  const date = new Date(value);
+    const date = new Date(value);
 
-  return date.toLocaleString("en-NZ", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
+    return date.toLocaleString("en-NZ", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
 
-  function formatMeetingDuration(minutes?: number | null) {
+  function formatMeetingDuration(
+    minutes?: number | null
+  ) {
     if (!minutes) return "Not available";
-  
+
     if (minutes < 60) {
       return `${minutes} min`;
     }
-  
+
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-  
+
     if (remainingMinutes === 0) {
       return `${hours} hr`;
     }
-  
+
     return `${hours} hr ${remainingMinutes} min`;
   }
 
-  
   function formatPlatform(value: string) {
     if (value === "zoom") {
       return "Zoom";
@@ -552,33 +556,48 @@ function formatMeetingDate(value?: string | null) {
             </span>
           </div>
 
-         <p className="muted" style={{ marginTop: 4, marginBottom: 2 }}>
-            {session.scheduled_start
-              ? formatMeetingDate(session.scheduled_start)
-              : "Date not available"}
-          
-            {session.duration_minutes
-              ? ` · ${formatMeetingDuration(session.duration_minutes)}`
-              : ""}
-          </p>
-          
           <p
             className="muted"
-            style={{ marginTop: 2, marginBottom: 2 }}
+            style={{
+              marginTop: 4,
+              marginBottom: 2,
+            }}
+          >
+            {session.scheduled_start
+              ? formatMeetingDate(
+                  session.scheduled_start
+                )
+              : "Date not available"}
+
+            {session.duration_minutes
+              ? ` · ${formatMeetingDuration(
+                  session.duration_minutes
+                )}`
+              : ""}
+          </p>
+
+          <p
+            className="muted"
+            style={{
+              marginTop: 2,
+              marginBottom: 2,
+            }}
           >
             {formatPlatform(session.platform)}
             {" · "}
             {formatProvider(provider)}
           </p>
 
-{session.participants && session.participants.length > 0 ? (
-  <p
-    className="muted"
-    style={{ marginTop: 2 }}
-  >
-    Participants: {session.participants.join(", ")}
-  </p>
-) : null}
+          {session.participants &&
+          session.participants.length > 0 ? (
+            <p
+              className="muted"
+              style={{ marginTop: 2 }}
+            >
+              Participants:{" "}
+              {session.participants.join(", ")}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -620,30 +639,18 @@ function formatMeetingDate(value?: string | null) {
         </div>
       )}
 
-      {!isCompleted && session.platform !== "zoom" ?  (
+      {!isCompleted &&
+      session.platform !== "zoom" ? (
+        <div className="transcription-options">
           <div className="transcription-option">
-            <div className="live-session-toolbar"><div>
-              <strong>Live Zoom transcription</strong>
-              <span>
-                Transcript updates will appear automatically while the meeting is running.
-              </span>
-            </div>
-        
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => void onLiveRtms()}
-            >
-              Retry connection
-            </button>
-          </div>
-        ) : null}
             <div className="transcription-option-icon upload-icon">
               <Upload size={22} />
             </div>
 
             <div className="transcription-option-content">
-              <h3>Progressive transcription</h3>
+              <h3>
+                Progressive transcription
+              </h3>
 
               <p>
                 Upload meeting audio to create a
@@ -685,41 +692,7 @@ function formatMeetingDate(value?: string | null) {
             </div>
 
             <div className="transcription-option-content">
-              <h3>Live Zoom transcription</h3>
-
-              {session.meeting_id ? (
-                <>
-                  <p>
-                    Start or join the linked Zoom
-                    meeting. Live transcription
-                    begins automatically when the
-                    meeting audio becomes available.
-                  </p>
-
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() =>
-                      void onLiveRtms()
-                    }
-                  >
-                    Retry live connection
-                  </button>
-                </>
-              ) : (
-                <p>
-                  This session is not linked to a
-                  Zoom meeting.
-                </p>
-              )}
-
-              <h3
-                style={{
-                  marginTop: 20,
-                }}
-              >
-                Test with recording
-              </h3>
+              <h3>Test with recording</h3>
 
               <p>
                 Use a recording to test the live
@@ -753,6 +726,33 @@ function formatMeetingDate(value?: string | null) {
         </div>
       ) : null}
 
+      {!isCompleted &&
+      session.platform === "zoom" ? (
+        <div className="live-session-toolbar">
+          <div>
+            <strong>
+              Live Zoom transcription
+            </strong>
+
+            <span>
+              Transcript updates will appear
+              automatically while the meeting is
+              running.
+            </span>
+          </div>
+
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() =>
+              void onLiveRtms()
+            }
+          >
+            Retry connection
+          </button>
+        </div>
+      ) : null}
+
       {error ? (
         <p className="error">{error}</p>
       ) : null}
@@ -780,28 +780,40 @@ function formatMeetingDate(value?: string | null) {
 
         <aside className="transcript-sidebar">
           <h3>Meeting details</h3>
+
           <div className="detail">
-          <span>Date & time</span>
-          <strong>
-            {formatMeetingDate(session.scheduled_start)}
-          </strong>
-        </div>
-        
-        <div className="detail">
-          <span>Duration</span>
-          <strong>
-            {formatMeetingDuration(session.duration_minutes)}
-          </strong>
-        </div>
-        
-        <div className="detail">
-          <span>Participants</span>
-          <strong>
-            {session.participants && session.participants.length > 0
-              ? session.participants.join(", ")
-              : "Not available"}
-          </strong>
-        </div>
+            <span>Date & time</span>
+
+            <strong>
+              {formatMeetingDate(
+                session.scheduled_start
+              )}
+            </strong>
+          </div>
+
+          <div className="detail">
+            <span>Duration</span>
+
+            <strong>
+              {formatMeetingDuration(
+                session.duration_minutes
+              )}
+            </strong>
+          </div>
+
+          <div className="detail">
+            <span>Participants</span>
+
+            <strong>
+              {session.participants &&
+              session.participants.length > 0
+                ? session.participants.join(
+                    ", "
+                  )
+                : "Not provided"}
+            </strong>
+          </div>
+
           <div className="detail">
             <span>
               <CalendarDays size={12} />
