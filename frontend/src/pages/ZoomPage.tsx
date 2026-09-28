@@ -428,15 +428,28 @@ export default function ZoomPage() {
 
               <span>:</span>
 
-              <select
-                value={startMinute}
-                onChange={(e) => setStartMinute(e.target.value)}
-              >
-                <option value="00">00</option>
-                <option value="15">15</option>
-                <option value="30">30</option>
-                <option value="45">45</option>
-              </select>
+              <input
+              className="meeting-minute-input"
+              type="number"
+              min="0"
+              max="59"
+              value={startMinute}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+            
+                if (value >= 0 && value <= 59) {
+                  setStartMinute(e.target.value);
+                }
+              }}
+              onBlur={() => {
+                const minute = Math.min(
+                  59,
+                  Math.max(0, Number(startMinute) || 0)
+                );
+            
+                setStartMinute(String(minute).padStart(2, "0"));
+              }}
+            />
 
               <select
                 value={startPeriod}
