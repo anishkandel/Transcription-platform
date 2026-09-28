@@ -1,5 +1,15 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
 import {
   ArrowRight,
   CalendarDays,
@@ -29,11 +39,24 @@ import {
 export default function DashboardPage() {
   const navigate = useNavigate();
 
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [meetings, setMeetings] = useState<ZoomMeeting[]>([]);
-  const [zoomConnected, setZoomConnected] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [sessions, setSessions] =
+    useState<Session[]>([]);
+
+  const [meetings, setMeetings] =
+    useState<ZoomMeeting[]>([]);
+
+  const [zoomConnected, setZoomConnected] =
+    useState(false);
+
+  const [creating, setCreating] =
+    useState(false);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  /* =========================================================
+     LOAD DASHBOARD
+     ========================================================= */
 
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +64,10 @@ export default function DashboardPage() {
     const timer = window.setTimeout(() => {
       async function load() {
         try {
-          const [sessionRows, zoomStatus] = await Promise.all([
+          const [
+            sessionRows,
+            zoomStatus,
+          ] = await Promise.all([
             listSessions(),
             getZoomAuthStatus(),
           ]);
@@ -49,21 +75,30 @@ export default function DashboardPage() {
           if (cancelled) return;
 
           setSessions(sessionRows);
-          setZoomConnected(zoomStatus.connected);
+          setZoomConnected(
+            zoomStatus.connected
+          );
 
           if (zoomStatus.connected) {
-            const result = await listZoomMeetings("upcoming");
+            const result =
+              await listZoomMeetings(
+                "upcoming"
+              );
 
             if (cancelled) return;
 
-            setMeetings(result.meetings.slice(0, 6));
+            setMeetings(
+              result.meetings.slice(0, 6)
+            );
           } else {
             setMeetings([]);
           }
         } catch (err) {
           if (!cancelled) {
             setError(
-              err instanceof Error ? err.message : "Failed to load dashboard"
+              err instanceof Error
+                ? err.message
+                : "Failed to load dashboard"
             );
           }
         }
@@ -78,15 +113,25 @@ export default function DashboardPage() {
     };
   }, []);
 
+  /* =========================================================
+     STATS
+     ========================================================= */
+
   const stats = useMemo(() => {
     const completed = sessions.filter(
-      (session) => session.status === "completed"
+      (session) =>
+        session.status === "completed"
     ).length;
 
-    const live = sessions.filter((session) =>
-      ["transcribing", "mock_streaming", "mock_starting"].includes(
-        session.status
-      )
+    const live = sessions.filter(
+      (session) =>
+        [
+          "transcribing",
+          "mock_streaming",
+          "mock_starting",
+          "live_rtms_starting",
+          "waiting_rtms",
+        ].includes(session.status)
     ).length;
 
     return {
@@ -99,56 +144,142 @@ export default function DashboardPage() {
 
   const recent = sessions.slice(0, 5);
 
-  async function startUploadSession() {
+  /* =========================================================
+     OPEN ZOOM MEETING
+     ========================================================= */
+
+  async function openMeeting(
+    meeting: ZoomMeeting
+  ) {
     setCreating(true);
     setError(null);
 
     try {
-      const session = await createSession(
-        "Uploaded recording session",
-        "file",
-        undefined,
-        "manual"
-      );
+      const existingSession =
+        sessions.find(
+          (session) =>
+            session.platform === "zoom" &&
+            String(session.meeting_id) ===
+              String(meeting.id)
+        );
 
-      navigate(`/sessions/${session.id}`);
+      /*
+       * If a transcription session already exists
+       * for this Zoom meeting, simply open it.
+       */
+      if (existingSession) {
+        navigate(
+          `/sessions/${existingSession.id}`
+        );
+
+        return;
+      }
+
+      /*
+       * Otherwise create a transcription session
+       * for this Zoom meeting.
+       */
+      const session =
+        await createSession(
+          meeting.topic,
+          "zoom",
+          String(meeting.id),
+          "zoom",
+          meeting.start_time,
+          meeting.duration,
+          []
+        );
+
+      navigate(
+        `/sessions/${session.id}`
+      );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to create session"
+        err instanceof Error
+          ? err.message
+          : "Failed to open meeting"
       );
     } finally {
       setCreating(false);
     }
   }
 
+  /* =========================================================
+     UPLOAD SESSION
+     ========================================================= */
+
+  async function startUploadSession() {
+    setCreating(true);
+    setError(null);
+
+    try {
+      const session =
+        await createSession(
+          "Uploaded recording session",
+          "file",
+          undefined,
+          "manual"
+        );
+
+      navigate(
+        `/sessions/${session.id}`
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create session"
+      );
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  /* =========================================================
+     PAGE
+     ========================================================= */
+
   return (
     <div className="dashboard-page">
+
       {/* =====================================================
-          HERO / WELCOME
+          HERO
       ===================================================== */}
 
       <section className="dashboard-hero">
         <div className="dashboard-hero-content">
           <div className="welcome-label">
             <span className="welcome-dot" />
+
             Kaituhi-Kōrero workspace
           </div>
 
-          <h1>Kia ora, welcome back 👋</h1>
+          <h1>
+            Kia ora, welcome back 👋
+          </h1>
 
           <p>
-            Manage your meetings, start transcription, and review your kōrero
-            from one simple workspace.
+            Manage your meetings, start
+            transcription, and review your
+            kōrero from one simple workspace.
           </p>
 
           <div className="hero-actions">
-            <Link to="/scheduled" className="primary-button hero-primary">
+            <Link
+              to="/scheduled"
+              className="primary-button hero-primary"
+            >
               <Plus size={17} />
+
               Schedule meeting
             </Link>
 
-            <Link to="/history" className="hero-secondary">
+            <Link
+              to="/history"
+              className="hero-secondary"
+            >
               View transcript history
+
               <ArrowRight size={15} />
             </Link>
           </div>
@@ -164,11 +295,19 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <strong>Ready to kōrero</strong>
-              <span>Live transcription workspace</span>
+              <strong>
+                Ready to kōrero
+              </strong>
+
+              <span>
+                Live transcription workspace
+              </span>
             </div>
 
-            <Sparkles size={17} className="hero-sparkle" />
+            <Sparkles
+              size={17}
+              className="hero-sparkle"
+            />
           </div>
         </div>
       </section>
@@ -178,38 +317,56 @@ export default function DashboardPage() {
       ===================================================== */}
 
       <section className="dashboard-stats">
+
         <StatCard
-          icon={<CalendarDays size={19} />}
+          icon={
+            <CalendarDays size={19} />
+          }
           title="Upcoming meetings"
-          value={String(stats.scheduled)}
+          value={String(
+            stats.scheduled
+          )}
           description="From Zoom"
           accent="teal"
+          to="/scheduled"
         />
 
         <StatCard
           icon={<Radio size={19} />}
           title="Live transcription"
           value={String(stats.live)}
-          description={stats.live > 0 ? "Currently active" : "Nothing live"}
+          description={
+            stats.live > 0
+              ? "Currently active"
+              : "Nothing live"
+          }
           accent="orange"
           live={stats.live > 0}
         />
 
         <StatCard
-          icon={<CheckCircle2 size={19} />}
+          icon={
+            <CheckCircle2 size={19} />
+          }
           title="Completed meetings"
-          value={String(stats.completed)}
+          value={String(
+            stats.completed
+          )}
           description="Successfully completed"
           accent="green"
         />
 
         <StatCard
-          icon={<FileText size={19} />}
+          icon={
+            <FileText size={19} />
+          }
           title="Total transcripts"
           value={String(stats.total)}
           description="Your transcript library"
           accent="purple"
+          to="/history"
         />
+
       </section>
 
       {/* =====================================================
@@ -221,22 +378,28 @@ export default function DashboardPage() {
           <div>
             <div className="section-eyebrow">
               <Sparkles size={13} />
+
               QUICK START
             </div>
 
-            <h2>Start a transcription</h2>
+            <h2>
+              Start a transcription
+            </h2>
 
             <p>
-              Choose how you want to capture your kōrero today.
+              Choose how you want to capture
+              your kōrero today.
             </p>
           </div>
         </div>
 
         <div className="transcription-options">
-          {/* Zoom */}
+
+          {/* ZOOM */}
 
           <div className="transcription-option zoom-option">
             <div className="option-top">
+
               <div className="transcription-option-icon zoom-icon">
                 <Video size={23} />
               </div>
@@ -244,72 +407,105 @@ export default function DashboardPage() {
               {zoomConnected ? (
                 <span className="connection-badge connected">
                   <Wifi size={12} />
+
                   Connected
                 </span>
               ) : (
                 <span className="connection-badge disconnected">
                   <WifiOff size={12} />
+
                   Not connected
                 </span>
               )}
+
             </div>
 
             <div className="transcription-option-content">
-              <h3>Start Zoom Meeting</h3>
+              <h3>
+                Start Zoom Meeting
+              </h3>
 
               <p>
-                Connect to your Zoom meetings and begin live transcription
-                while your meeting is happening.
+                Connect to your Zoom meetings
+                and begin live transcription
+                while your meeting is
+                happening.
               </p>
 
-              <Link to="/scheduled" className="option-action primary-button">
+              <Link
+                to="/scheduled"
+                className="option-action primary-button"
+              >
                 <Mic size={15} />
+
                 Start transcription
+
                 <ArrowRight size={14} />
               </Link>
             </div>
           </div>
 
-          {/* Upload */}
+          {/* UPLOAD */}
 
           <div className="transcription-option upload-option">
             <div className="option-top">
+
               <div className="transcription-option-icon upload-icon">
                 <Upload size={23} />
               </div>
 
               <span className="connection-badge recording-badge">
                 <FileAudio size={12} />
+
                 Audio file
               </span>
             </div>
 
             <div className="transcription-option-content">
-              <h3>Upload Audio</h3>
+              <h3>
+                Upload Audio
+              </h3>
 
               <p>
-                Upload a recorded meeting and process it with progressive
+                Upload a recorded meeting and
+                process it with progressive
                 chunked transcription.
               </p>
 
               <button
                 className="option-action secondary-button"
                 type="button"
-                onClick={() => void startUploadSession()}
+                onClick={() =>
+                  void startUploadSession()
+                }
                 disabled={creating}
               >
                 <Upload size={15} />
-                {creating ? "Creating session..." : "Upload recording"}
-                {!creating && <ArrowRight size={14} />}
+
+                {creating
+                  ? "Creating session..."
+                  : "Upload recording"}
+
+                {!creating && (
+                  <ArrowRight size={14} />
+                )}
               </button>
             </div>
           </div>
+
         </div>
       </section>
 
+      {/* =====================================================
+          ERROR
+      ===================================================== */}
+
       {error ? (
         <div className="dashboard-error">
-          <strong>Something went wrong</strong>
+          <strong>
+            Something went wrong
+          </strong>
+
           <span>{error}</span>
         </div>
       ) : null}
@@ -319,97 +515,160 @@ export default function DashboardPage() {
       ===================================================== */}
 
       <section className="dashboard-section">
+
         <div className="section-title">
           <div>
-            <h2>Upcoming meetings</h2>
-            <p>Your next meetings available through Zoom.</p>
+            <h2>
+              Upcoming meetings
+            </h2>
+
+            <p>
+              Your next meetings available
+              through Zoom.
+            </p>
           </div>
 
-          <Link to="/scheduled" className="view-all-link">
+          <Link
+            to="/scheduled"
+            className="view-all-link"
+          >
             View all
+
             <ArrowRight size={15} />
           </Link>
         </div>
 
         {!zoomConnected ? (
+
           <div className="empty-meetings enhanced-empty">
             <div className="empty-icon">
               <Video size={22} />
             </div>
 
             <div>
-              <h3>Connect your Zoom account</h3>
+              <h3>
+                Connect your Zoom account
+              </h3>
 
               <p>
-                Connect Zoom to automatically load your hosted and invited
+                Connect Zoom to automatically
+                load your hosted and invited
                 meetings here.
               </p>
 
-              <Link to="/scheduled" className="primary-button">
+              <Link
+                to="/scheduled"
+                className="primary-button"
+              >
                 Connect Zoom
+
                 <ArrowRight size={14} />
               </Link>
             </div>
           </div>
+
         ) : meetings.length === 0 ? (
+
           <div className="empty-meetings enhanced-empty">
             <div className="empty-icon">
               <CalendarDays size={22} />
             </div>
 
             <div>
-              <h3>No upcoming Zoom meetings</h3>
+              <h3>
+                No upcoming Zoom meetings
+              </h3>
 
               <p>
-                Your upcoming hosted and invited meetings will appear here.
+                Your upcoming hosted and
+                invited meetings will appear
+                here.
               </p>
 
-              <Link to="/scheduled" className="secondary-button">
+              <Link
+                to="/scheduled"
+                className="secondary-button"
+              >
                 Open Scheduled Meetings
               </Link>
             </div>
           </div>
+
         ) : (
+
           <div className="meeting-grid">
-            {meetings.map((meeting) => (
-              <MeetingCard
-                key={String(meeting.id)}
-                title={meeting.topic}
-                date={
-                  meeting.start_time
-                    ? new Date(meeting.start_time).toLocaleDateString(
-                        undefined,
-                        {
-                          weekday: "short",
-                          day: "numeric",
-                          month: "short",
-                        }
-                      )
-                    : "Date TBD"
-                }
-                time={
-                  meeting.start_time
-                    ? new Date(meeting.start_time).toLocaleTimeString(
-                        undefined,
-                        {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        }
-                      )
-                    : "Time TBD"
-                }
-                duration={
-                  meeting.duration ? `${meeting.duration} min` : "—"
-                }
-                participants={
-                  meeting.source === "invited" || meeting.is_host === false
-                    ? "Invited meeting"
-                    : "You host"
-                }
-                to="/scheduled"
-              />
-            ))}
+
+            {meetings.map(
+              (meeting) => (
+                <MeetingCard
+                  key={String(
+                    meeting.id
+                  )}
+
+                  title={
+                    meeting.topic
+                  }
+
+                  date={
+                    meeting.start_time
+                      ? new Date(
+                          meeting.start_time
+                        ).toLocaleDateString(
+                          undefined,
+                          {
+                            weekday:
+                              "short",
+                            day: "numeric",
+                            month: "short",
+                          }
+                        )
+                      : "Date TBD"
+                  }
+
+                  time={
+                    meeting.start_time
+                      ? new Date(
+                          meeting.start_time
+                        ).toLocaleTimeString(
+                          undefined,
+                          {
+                            hour:
+                              "numeric",
+                            minute:
+                              "2-digit",
+                          }
+                        )
+                      : "Time TBD"
+                  }
+
+                  duration={
+                    meeting.duration
+                      ? `${meeting.duration} min`
+                      : "—"
+                  }
+
+                  participants={
+                    meeting.source ===
+                      "invited" ||
+                    meeting.is_host ===
+                      false
+                      ? "Invited meeting"
+                      : "You host"
+                  }
+
+                  disabled={creating}
+
+                  onOpen={() =>
+                    void openMeeting(
+                      meeting
+                    )
+                  }
+                />
+              )
+            )}
+
           </div>
+
         )}
       </section>
 
@@ -418,66 +677,99 @@ export default function DashboardPage() {
       ===================================================== */}
 
       <section className="dashboard-section recent-section">
+
         <div className="section-title">
           <div>
-            <h2>Recent transcripts</h2>
-            <p>Quick access to your latest transcription sessions.</p>
+            <h2>
+              Recent transcripts
+            </h2>
+
+            <p>
+              Quick access to your latest
+              transcription sessions.
+            </p>
           </div>
 
-          <Link to="/history" className="view-all-link">
+          <Link
+            to="/history"
+            className="view-all-link"
+          >
             View history
+
             <ArrowRight size={15} />
           </Link>
         </div>
 
         {recent.length === 0 ? (
+
           <div className="empty-meetings enhanced-empty">
             <div className="empty-icon">
               <FileText size={22} />
             </div>
 
             <div>
-              <h3>No transcripts yet</h3>
+              <h3>
+                No transcripts yet
+              </h3>
 
               <p>
-                Start a meeting or upload a recording to create your first
-                transcript.
+                Start a meeting or upload a
+                recording to create your
+                first transcript.
               </p>
             </div>
           </div>
+
         ) : (
+
           <div className="transcript-list">
-            {recent.map((session) => (
-              <Link
-                key={session.id}
-                to={`/sessions/${session.id}`}
-                className="transcript-row"
-              >
-                <div className="file-icon">
-                  <FileText size={18} />
-                </div>
 
-                <div className="transcript-row-content">
-                  <strong>{session.title}</strong>
-
-                  <span>
-                    {new Date(session.updated_at).toLocaleString()}
-                  </span>
-                </div>
-
-                <span
-                  className={`transcript-status ${session.status.toLowerCase()}`}
+            {recent.map(
+              (session) => (
+                <Link
+                  key={session.id}
+                  to={`/sessions/${session.id}`}
+                  className="transcript-row"
                 >
-                  {session.status.split("_").join(" ")}
-                </span>
+                  <div className="file-icon">
+                    <FileText
+                      size={18}
+                    />
+                  </div>
 
-                <div className="transcript-arrow">
-                  <ArrowRight size={16} />
-                </div>
-              </Link>
-            ))}
+                  <div className="transcript-row-content">
+                    <strong>
+                      {session.title}
+                    </strong>
+
+                    <span>
+                      {new Date(
+                        session.updated_at
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <span
+                    className={`transcript-status ${session.status.toLowerCase()}`}
+                  >
+                    {session.status
+                      .split("_")
+                      .join(" ")}
+                  </span>
+
+                  <div className="transcript-arrow">
+                    <ArrowRight
+                      size={16}
+                    />
+                  </div>
+                </Link>
+              )
+            )}
+
           </div>
+
         )}
+
       </section>
     </div>
   );
@@ -494,34 +786,73 @@ function StatCard({
   description,
   accent,
   live,
+  to,
 }: {
   icon: ReactNode;
   title: string;
   value: string;
   description: string;
-  accent: "teal" | "orange" | "green" | "purple";
+  accent:
+    | "teal"
+    | "orange"
+    | "green"
+    | "purple";
   live?: boolean;
+  to?: string;
 }) {
-  return (
-    <div className={`stat-card stat-${accent}`}>
+  const content = (
+    <>
       <div className="stat-card-top">
-        <div className="stat-icon">{icon}</div>
+        <div className="stat-icon">
+          {icon}
+        </div>
 
         {live ? (
           <span className="stat-live">
             <span />
+
             LIVE
           </span>
         ) : (
-          <Clock3 size={14} className="stat-clock" />
+          <Clock3
+            size={14}
+            className="stat-clock"
+          />
         )}
       </div>
 
       <div className="stat-card-info">
         <span>{title}</span>
+
         <strong>{value}</strong>
-        <small>{description}</small>
+
+        <small>
+          {description}
+        </small>
       </div>
+    </>
+  );
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className={`stat-card stat-${accent}`}
+        style={{
+          textDecoration: "none",
+          color: "inherit",
+        }}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className={`stat-card stat-${accent}`}
+    >
+      {content}
     </div>
   );
 }
@@ -536,54 +867,79 @@ function MeetingCard({
   time,
   duration,
   participants,
-  to,
+  onOpen,
+  disabled,
 }: {
   title: string;
   date: string;
   time: string;
   duration: string;
   participants: string;
-  to: string;
+  onOpen: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="meeting-card">
+
       <div className="meeting-card-header">
+
         <span className="meeting-type">
           <Video size={12} />
+
           Zoom
         </span>
 
         <span className="meeting-host-status">
-          {participants === "You host" ? "HOST" : "INVITED"}
+          {participants === "You host"
+            ? "HOST"
+            : "INVITED"}
         </span>
+
       </div>
 
       <h3>{title}</h3>
 
       <div className="meeting-info">
+
         <div>
           <CalendarDays size={14} />
+
           <span>{date}</span>
         </div>
 
         <div>
           <Clock3 size={14} />
+
           <span>
             {time} · {duration}
           </span>
         </div>
+
       </div>
 
       <div className="meeting-card-footer">
+
         <span className="meeting-participant">
           {participants}
         </span>
 
-        <Link to={to} className="meeting-open">
-          Open
-          <ArrowRight size={13} />
-        </Link>
+        <button
+          type="button"
+          className="meeting-open"
+          onClick={onOpen}
+          disabled={disabled}
+        >
+          {disabled
+            ? "Opening..."
+            : "Open"}
+
+          {!disabled && (
+            <ArrowRight size={13} />
+          )}
+        </button>
+
       </div>
+
     </div>
   );
 }
