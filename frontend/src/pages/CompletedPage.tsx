@@ -146,7 +146,9 @@ export default function CompletedPage() {
                   <div className="completed-session-details">
                     <span>
                       <Clock3 size={14} />
-                      {new Date(session.updated_at).toLocaleString()}
+                      {session.scheduled_start
+                          ? new Date(session.scheduled_start).toLocaleString()
+                          : new Date(session.updated_at).toLocaleString()}
                     </span>
 
                     <span>
