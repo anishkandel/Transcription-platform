@@ -49,7 +49,22 @@ class SessionRecord(Base):
     nullable=True,
     index=True,
     )
-    source: Mapped[str] = mapped_column(String(32), default="manual")  # manual|zoom|mock_rtms
+    source: Mapped[str] = mapped_column(String(32), default="manual") 
+    # manual|zoom|mock_rtms
+    scheduled_start: Mapped[datetime | None] = mapped_column(
+    DateTime(timezone=True),
+    nullable=True,
+    )
+    
+    duration_minutes: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+    
+    participants: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
