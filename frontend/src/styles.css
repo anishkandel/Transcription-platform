@@ -7038,3 +7038,30 @@ a {
   background: #fff;
   font: inherit;
 }
+
+.participants-list {
+  margin-top: 8px;
+}
+
+.participants-list summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.participants-list-content {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.participant-email {
+  font-size: 12px;
+  color: #475569;
+  word-break: break-word;
+  padding: 6px 8px;
+  background: #f8faf9;
+  border-radius: 6px;
+}
