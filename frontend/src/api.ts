@@ -61,6 +61,11 @@ export type Session = {
   platform: string;
   meeting_id?: string | null;
   source?: string;
+
+  scheduled_start?: string | null;
+  duration_minutes?: number | null;
+  participants?: string[];
+
   created_at: string;
   updated_at: string;
 };
@@ -143,7 +148,10 @@ export async function createSession(
   title: string,
   platform = "file",
   meetingId?: string,
-  source: "manual" | "zoom" | "mock_rtms" = "manual"
+  source: "manual" | "zoom" | "mock_rtms" = "manual",
+  scheduledStart?: string,
+  durationMinutes?: number,
+  participants: string[] = []
 ): Promise<Session> {
   const response = await request("/api/sessions", {
     method: "POST",
@@ -152,15 +160,16 @@ export async function createSession(
       platform,
       meeting_id: meetingId || null,
       source,
+      scheduled_start: scheduledStart || null,
+      duration_minutes: durationMinutes ?? null,
+      participants,
     }),
   });
-  if (!response.ok) throw new Error(await parseError(response));
-  return response.json();
-}
 
-export async function listSessions(): Promise<Session[]> {
-  const response = await request("/api/sessions");
-  if (!response.ok) throw new Error(await parseError(response));
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
   return response.json();
 }
 
