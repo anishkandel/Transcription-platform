@@ -77,57 +77,73 @@ def _get_session_transcript(
     rtms_transcripts = [
         transcript
         for transcript in transcripts
-        if transcript.provider in rtms_providers and transcript.text
+        if transcript.provider in rtms_providers
+        and transcript.text
     ]
 
+    # Live Zoom RTMS transcripts
     if rtms_transcripts:
         text_parts = [
             transcript.text.strip()
             for transcript in rtms_transcripts
-            if transcript.text and transcript.text.strip()
+            if transcript.text
+            and transcript.text.strip()
         ]
 
         combined_text = "\n".join(text_parts)
 
         providers = []
+
         for transcript in rtms_transcripts:
             if transcript.provider not in providers:
-                providers.append(transcript.provider)
+                providers.append(
+                    transcript.provider
+                )
 
         provider = " + ".join(providers)
-        is_final = all(transcript.is_final for transcript in rtms_transcripts)
-        updated_at = max(
-        (
-            transcript.updated_at or transcript.created_at
-            for transcript in rtms_transcripts
-        ),
-        default=None,
-    )
-    
-    duration_seconds = max(
-        (
-            transcript.duration_seconds
-            for transcript in rtms_transcripts
-            if transcript.duration_seconds is not None
-        ),
-        default=None,
-    )
-    
-    return (
-        combined_text,
-        provider,
-        is_final,
-        updated_at,
-        duration_seconds,
-    )
 
+        is_final = all(
+            transcript.is_final
+            for transcript in rtms_transcripts
+        )
+
+        updated_at = max(
+            (
+                transcript.updated_at
+                or transcript.created_at
+                for transcript in rtms_transcripts
+            ),
+            default=None,
+        )
+
+        duration_seconds = max(
+            (
+                transcript.duration_seconds
+                for transcript in rtms_transcripts
+                if transcript.duration_seconds
+                is not None
+            ),
+            default=None,
+        )
+
+        return (
+            combined_text,
+            provider,
+            is_final,
+            updated_at,
+            duration_seconds,
+        )
+
+    # Uploaded audio / normal transcription
     transcript = transcripts[-1]
 
     return (
         transcript.text,
         transcript.provider,
         transcript.is_final,
-        transcript.updated_at or transcript.created_at,
+        transcript.updated_at
+        or transcript.created_at,
+        transcript.duration_seconds,
     )
 
 
