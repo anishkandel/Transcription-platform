@@ -594,8 +594,7 @@ export default function SessionPage() {
               className="muted"
               style={{ marginTop: 2 }}
             >
-              Participants:{" "}
-              {session.participants.join(", ")}
+              Participants: {session.participants.length}
             </p>
           ) : null}
         </div>
@@ -801,18 +800,33 @@ export default function SessionPage() {
             </strong>
           </div>
 
-          <div className="detail">
-            <span>Participants</span>
+          <div className="detail participants-detail">
+          <span>Participants</span>
 
-            <strong>
-              {session.participants &&
-              session.participants.length > 0
-                ? session.participants.join(
-                    ", "
-                  )
-                : "Not provided"}
-            </strong>
+           <strong>
+            {session.participants && session.participants.length > 0
+              ? `${session.participants.length} participant${
+                  session.participants.length === 1 ? "" : "s"
+                }`
+              : "Not provided"}
+          </strong>
           </div>
+          {session.participants && session.participants.length > 0 ? (
+          <details className="participants-list">
+            <summary>View participants</summary>
+        
+            <div className="participants-list-content">
+              {session.participants.map((participant) => (
+                <div
+                  key={participant}
+                  className="participant-email"
+                >
+                  {participant}
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : null}
 
           <div className="detail">
             <span>
