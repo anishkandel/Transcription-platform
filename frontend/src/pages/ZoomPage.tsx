@@ -18,17 +18,17 @@ import {
 const TIMEZONE = "Pacific/Auckland";
 
 /** Default: ~1 hour from now, as datetime-local value (YYYY-MM-DDTHH:mm). */
-function defaultLocalStart(): string {
-  const d = new Date(Date.now() + 60 * 60 * 1000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+// function defaultLocalStart(): string {
+//   const d = new Date(Date.now() + 60 * 60 * 1000);
+//   const pad = (n: number) => String(n).padStart(2, "0");
+//   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+// }
 
 /** datetime-local → Zoom start_time (wall time + seconds). */
-function toZoomStartTime(localValue: string): string | undefined {
-  if (!localValue) return undefined;
-  return localValue.length === 16 ? `${localValue}:00` : localValue;
-}
+// function toZoomStartTime(localValue: string): string | undefined {
+//   if (!localValue) return undefined;
+//   return localValue.length === 16 ? `${localValue}:00` : localValue;
+// }
 
 function parseAttendeeEmails(raw: string): string[] {
   return raw
@@ -37,6 +37,26 @@ function parseAttendeeEmails(raw: string): string[] {
     .filter((s) => s.includes("@"));
 }
 
+function buildZoomStartTime(
+  date: string,
+  hour: string,
+  minute: string,
+  period: "AM" | "PM"
+): string | undefined {
+  if (!date || !hour || !minute) return undefined;
+
+  let hour24 = Number(hour);
+
+  if (period === "AM" && hour24 === 12) {
+    hour24 = 0;
+  }
+
+  if (period === "PM" && hour24 !== 12) {
+    hour24 += 12;
+  }
+
+  return `${date}T${String(hour24).padStart(2, "0")}:${minute}:00`;
+}
 export default function ZoomPage() {
   const navigate = useNavigate();
   const { refresh: refreshAuth } = useAuth();
@@ -45,9 +65,30 @@ export default function ZoomPage() {
   const [listNote, setListNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [topic, setTopic] = useState("Kaituhi Korero test meeting");
-  const [startTime, setStartTime] = useState(defaultLocalStart);
-  const [duration, setDuration] = useState(60);
+  const defaultStart = new Date(Date.now() + 60 * 60 * 1000);
+  
+  const [topic, setTopic] = useState("");
+  
+  const [startDate, setStartDate] = useState(
+    `${defaultStart.getFullYear()}-${String(defaultStart.getMonth() + 1).padStart(2, "0")}-${String(
+      defaultStart.getDate()
+    ).padStart(2, "0")}`
+  );
+  
+  const initialHour = defaultStart.getHours();
+  const [startHour, setStartHour] = useState(
+    String(initialHour % 12 || 12).padStart(2, "0")
+  );
+  
+  const [startMinute, setStartMinute] = useState("00");
+  
+  const [startPeriod, setStartPeriod] = useState<"AM" | "PM">(
+    initialHour >= 12 ? "PM" : "AM"
+  );
+  
+  const [durationHours, setDurationHours] = useState(0);
+  const [durationMinutes, setDurationMinutes] = useState(30);
+  
   const [attendees, setAttendees] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -113,6 +154,26 @@ export default function ZoomPage() {
     }
   }
 
+  const duration = durationHours * 60 + durationMinutes;
+
+if (!topic.trim()) {
+  setError("Please enter a meeting topic.");
+  setBusy(false);
+  return;
+}
+
+if (emails.length === 0) {
+  setError("Please add at least one participant email.");
+  setBusy(false);
+  return;
+}
+
+if (duration <= 0) {
+  setError("Please select a meeting duration.");
+  setBusy(false);
+  return;
+}
+  
   async function onCreateMeeting(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -122,7 +183,12 @@ export default function ZoomPage() {
     try {
       const created = await createZoomMeeting({
         topic,
-        start_time: toZoomStartTime(startTime),
+        start_time: buildZoomStartTime(
+          startDate,
+          startHour,
+          startMinute,
+          startPeriod
+        ),
         duration,
         timezone: TIMEZONE,
         attendees: emails,
@@ -246,39 +312,108 @@ export default function ZoomPage() {
           </div>
         </div>
         <form className="settings-form" onSubmit={onCreateMeeting}>
-          <div className="form-group">
-            <label>Topic</label>
-            <input value={topic} onChange={(e) => setTopic(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label>Start time ({TIMEZONE})</label>
+         <div className="form-group">
+          <label>Topic</label>
+          <input
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="Enter meeting topic"
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>When</label>
+        
+          <div className="meeting-when-row">
             <input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
               required
             />
+        
+            <select
+              value={startHour}
+              onChange={(e) => setStartHour(e.target.value)}
+            >
+              {Array.from({ length: 12 }, (_, index) => index + 1).map((hour) => (
+                <option key={hour} value={String(hour).padStart(2, "0")}>
+                  {hour}
+                </option>
+              ))}
+            </select>
+        
+            <span>:</span>
+        
+            <select
+              value={startMinute}
+              onChange={(e) => setStartMinute(e.target.value)}
+            >
+              <option value="00">00</option>
+              <option value="15">15</option>
+              <option value="30">30</option>
+              <option value="45">45</option>
+            </select>
+        
+            <select
+              value={startPeriod}
+              onChange={(e) =>
+                setStartPeriod(e.target.value as "AM" | "PM")
+              }
+            >
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
           </div>
-          <div className="form-group">
-            <label>Duration (minutes)</label>
-            <input
-              type="number"
-              min={1}
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value) || 60)}
-            />
+        </div>
+        
+        <div className="form-group">
+          <label>Duration</label>
+        
+          <div className="duration-row">
+            <select
+              value={durationHours}
+              onChange={(e) => setDurationHours(Number(e.target.value))}
+            >
+              <option value={0}>0</option>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+              <option value={4}>4</option>
+            </select>
+        
+            <span>hr</span>
+        
+            <select
+              value={durationMinutes}
+              onChange={(e) => setDurationMinutes(Number(e.target.value))}
+            >
+              <option value={0}>0</option>
+              <option value={15}>15</option>
+              <option value={30}>30</option>
+              <option value={45}>45</option>
+            </select>
+        
+            <span>min</span>
           </div>
+        </div>
           <div className="form-group">
-            <label>Participants (emails)</label>
+            <label>
+              Participants <span className="required-mark">*</span>
+            </label>
+          
             <textarea
               value={attendees}
               onChange={(e) => setAttendees(e.target.value)}
-              placeholder="friend@example.com, another@example.com"
+              placeholder="Enter participant email addresses"
               rows={2}
+              required
             />
+          
             <span className="muted" style={{ fontSize: 13 }}>
-              Optional. Comma or space separated. Zoom will email invitees when supported on the
-              account.
+              Add one or more email addresses separated by commas or spaces.
+              Zoom will send the meeting invitation.
             </span>
           </div>
           <div className="form-group" style={{ justifyContent: "end" }}>
