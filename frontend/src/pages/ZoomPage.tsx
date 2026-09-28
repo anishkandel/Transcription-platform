@@ -80,8 +80,11 @@ export default function ZoomPage() {
 
   const [durationHours, setDurationHours] = useState(0);
   const [durationMinutes, setDurationMinutes] = useState(30);
-
+  const [meetingParticipants, setMeetingParticipants] = useState<
+  Record<string, string[]>
+>({});
   const [attendees, setAttendees] = useState("");
+
 
   async function refresh() {
     setError(null);
@@ -203,6 +206,10 @@ export default function ZoomPage() {
         timezone: TIMEZONE,
         attendees: emails,
       });
+      setMeetingParticipants((prev) => ({
+       ...prev,
+       [String(created.id)]: emails,
+    }));
 
       const inviteNote =
         emails.length > 0
@@ -285,7 +292,10 @@ export default function ZoomPage() {
         meeting.topic,
         "zoom",
         String(meeting.id),
-        "zoom"
+        "zoom",
+        meeting.start_time,
+        meeting.duration,
+        meetingParticipants[String(meeting.id)] || []
       );
 
       navigate(`/sessions/${session.id}`);
