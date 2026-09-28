@@ -173,6 +173,16 @@ export async function createSession(
   return response.json();
 }
 
+export async function listSessions(): Promise<Session[]> {
+  const response = await request("/api/sessions");
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  return response.json();
+}
+
 export async function getSession(sessionId: string): Promise<Session> {
   const response = await request(`/api/sessions/${sessionId}`);
   if (!response.ok) throw new Error(await parseError(response));
