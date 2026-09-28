@@ -87,9 +87,51 @@ export default function DashboardPage() {
 
             if (cancelled) return;
 
-            setMeetings(
-              result.meetings.slice(0, 6)
-            );
+            const activeUpcomingMeetings =
+            result.meetings.filter((meeting) => {
+              const relatedSession =
+                sessionRows.find(
+                  (session) =>
+                    session.platform === "zoom" &&
+                    String(session.meeting_id) ===
+                      String(meeting.id)
+                );
+          
+              if (
+                relatedSession?.status ===
+                "completed"
+              ) {
+                return false;
+              }
+          
+              if (meeting.start_time) {
+                const startTime =
+                  new Date(
+                    meeting.start_time
+                  ).getTime();
+          
+                const durationMs =
+                  (meeting.duration || 0) *
+                  60 *
+                  1000;
+          
+                const meetingEnd =
+                  startTime + durationMs;
+          
+                if (
+                  meetingEnd <
+                  Date.now()
+                ) {
+                  return false;
+                }
+              }
+          
+              return true;
+            });
+          
+          setMeetings(
+            activeUpcomingMeetings.slice(0, 6)
+          );
           } else {
             setMeetings([]);
           }
@@ -128,9 +170,6 @@ export default function DashboardPage() {
         [
           "transcribing",
           "mock_streaming",
-          "mock_starting",
-          "live_rtms_starting",
-          "waiting_rtms",
         ].includes(session.status)
     ).length;
 
