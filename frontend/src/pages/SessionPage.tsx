@@ -43,6 +43,7 @@ export default function SessionPage() {
   const { sessionId = "" } = useParams();
 
   const [session, setSession] = useState<Session | null>(null);
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
   const [transcript, setTranscript] = useState("");
   const [lines, setLines] = useState<ChatLine[]>([]);
   const [provider, setProvider] = useState("none");
@@ -79,6 +80,9 @@ export default function SessionPage() {
         setSession(sessionData);
         setTranscript(transcriptData.text || "");
         setProvider(transcriptData.provider || "none");
+        setDurationSeconds(
+          transcriptData.duration_seconds ?? null
+        );
 
         if (transcriptData.text) {
           setLines(linesFromTranscript(transcriptData.text));
@@ -509,6 +513,18 @@ export default function SessionPage() {
     return `${hours} hr ${remainingMinutes} min`;
   }
 
+  function formatAudioDuration(
+  seconds?: number | null
+) {
+  if (!seconds) return "Not available";
+
+  const totalSeconds = Math.round(seconds);
+  const minutes = Math.floor(totalSeconds / 60);
+  const remainingSeconds = totalSeconds % 60;
+
+  return `${minutes} min ${remainingSeconds} sec`;
+}
+
   function formatPlatform(value: string) {
     if (value === "zoom") {
       return "Zoom";
@@ -563,17 +579,18 @@ export default function SessionPage() {
               marginBottom: 2,
             }}
           >
-            {session.scheduled_start
-              ? formatMeetingDate(
-                  session.scheduled_start
-                )
-              : "Date not available"}
+            {formatMeetingDate(
+                session.platform === "file"
+                  ? session.created_at
+                  : session.scheduled_start
+              )}
 
-            {session.duration_minutes
-              ? ` · ${formatMeetingDuration(
+              {session.platform === "zoom" &&
                   session.duration_minutes
-                )}`
-              : ""}
+                    ? ` · ${formatMeetingDuration(
+                        session.duration_minutes
+                      )}`
+                    : ""}
           </p>
 
           <p
@@ -785,7 +802,9 @@ export default function SessionPage() {
 
             <strong>
               {formatMeetingDate(
-                session.scheduled_start
+               session.platform === "file"
+                  ? session.created_at
+                  : session.scheduled_start
               )}
             </strong>
           </div>
@@ -793,24 +812,27 @@ export default function SessionPage() {
           <div className="detail">
             <span>Duration</span>
 
-            <strong>
-              {formatMeetingDuration(
-                session.duration_minutes
-              )}
-            </strong>
-          </div>
-
-          <div className="detail participants-detail">
-          <span>Participants</span>
-
            <strong>
-            {session.participants && session.participants.length > 0
-              ? `${session.participants.length} participant${
-                  session.participants.length === 1 ? "" : "s"
-                }`
-              : "Not provided"}
+            {session.platform === "file"
+              ? formatAudioDuration(durationSeconds)
+              : formatMeetingDuration(
+                  session.duration_minutes
+                )}
           </strong>
           </div>
+          {session.platform === "zoom" ? (
+            <div className="detail participants-detail">
+              <span>Participants</span>
+          
+              <strong>
+                {session.participants && session.participants.length > 0
+                  ? `${session.participants.length} participant${
+                      session.participants.length === 1 ? "" : "s"
+                    }`
+                  : "Not provided"}
+              </strong>
+            </div>
+          ) : null}
           {session.participants && session.participants.length > 0 ? (
           <details className="participants-list">
             <summary>View participants</summary>
