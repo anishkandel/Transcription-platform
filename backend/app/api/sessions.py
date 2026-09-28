@@ -1,3 +1,4 @@
+import json
 from __future__ import annotations
 
 import uuid
@@ -36,6 +37,23 @@ def _get_owned_session(db: Session, session_id: str, user: UserRecord) -> Sessio
     if not record or record.user_id != user.id:
         raise HTTPException(status_code=404, detail="Session not found")
     return record
+
+
+def _session_out(record: SessionRecord) -> SessionOut:
+    return SessionOut(
+        id=record.id,
+        user_id=record.user_id,
+        title=record.title,
+        status=record.status,
+        platform=record.platform,
+        meeting_id=record.meeting_id,
+        source=record.source,
+        scheduled_start=record.scheduled_start,
+        duration_minutes=record.duration_minutes,
+        participants=json.loads(record.participants or "[]"),
+        created_at=record.created_at,
+        updated_at=record.updated_at,
+    )
 
 def _get_session_transcript(
     db: Session,
@@ -104,7 +122,7 @@ def create_session(
     payload: SessionCreate,
     db: Session = Depends(get_db),
     user: UserRecord = Depends(get_current_user),
-) -> SessionRecord:
+) -> SessionOut:
     record = SessionRecord(
         id=str(uuid.uuid4()),
         user_id=user.id,
@@ -112,20 +130,25 @@ def create_session(
         platform=payload.platform,
         meeting_id=payload.meeting_id,
         source=payload.source,
+        scheduled_start=payload.scheduled_start,
+        duration_minutes=payload.duration_minutes,
+        participants=json.dumps(payload.participants),
         status="created",
     )
+
     db.add(record)
     db.commit()
     db.refresh(record)
-    return record
+
+    return _session_out(record)
 
 
 @router.get("", response_model=list[SessionOut])
 def list_sessions(
     db: Session = Depends(get_db),
     user: UserRecord = Depends(get_current_user),
-) -> list[SessionRecord]:
-    return list(
+) -> list[SessionOut]:
+    records = list(
         db.scalars(
             select(SessionRecord)
             .where(SessionRecord.user_id == user.id)
@@ -133,14 +156,18 @@ def list_sessions(
         )
     )
 
+    return [_session_out(record) for record in records]
+
 
 @router.get("/{session_id}", response_model=SessionOut)
 def get_session(
     session_id: str,
     db: Session = Depends(get_db),
     user: UserRecord = Depends(get_current_user),
-) -> SessionRecord:
-    return _get_owned_session(db, session_id, user)
+) -> SessionOut:
+    record = _get_owned_session(db, session_id, user)
+
+    return _session_out(record)
 
 
 @router.post("/{session_id}/stop", response_model=SessionOut)
