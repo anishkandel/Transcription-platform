@@ -174,42 +174,52 @@ if (duration <= 0) {
   return;
 }
   
-  async function onCreateMeeting(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError(null);
-    setNotice(null);
-    const emails = parseAttendeeEmails(attendees);
-    try {
-      const created = await createZoomMeeting({
-        topic,
-        start_time: buildZoomStartTime(
-          startDate,
-          startHour,
-          startMinute,
-          startPeriod
-        ),
-        duration,
-        timezone: TIMEZONE,
-        attendees: emails,
-      });
-      const inviteNote =
-        emails.length > 0
-          ? ` · invited ${emails.length} participant${emails.length === 1 ? "" : "s"}`
-          : "";
-      setNotice(`Meeting created (ID ${created.id})${inviteNote}. Refreshing list…`);
-      // Zoom list can lag briefly after create
-      await new Promise((r) => setTimeout(r, 800));
-      await refresh();
-      setStartTime(defaultLocalStart());
-      setAttendees("");
-      setNotice(`Meeting created (ID ${created.id})${inviteNote}.`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create meeting");
-    } finally {
-      setBusy(false);
-    }
+ async function onCreateMeeting(event: FormEvent) {
+  event.preventDefault();
+
+  setBusy(true);
+  setError(null);
+  setNotice(null);
+
+  const emails = parseAttendeeEmails(attendees);
+  try {
+    const created = await createZoomMeeting({
+      topic: topic.trim(),
+      start_time: buildZoomStartTime(
+        startDate,
+        startHour,
+        startMinute,
+        startPeriod
+      ),
+      duration,
+      timezone: TIMEZONE,
+      attendees: emails,
+    });
+
+    const inviteNote =
+      emails.length > 0
+        ? ` · invited ${emails.length} participant${emails.length === 1 ? "" : "s"}`
+        : "";
+
+    setNotice(
+      `Meeting created (ID ${created.id})${inviteNote}. Refreshing list…`
+    );
+
+    await new Promise((r) => setTimeout(r, 800));
+    await refresh();
+
+    setTopic("");
+    setAttendees("");
+
+    setNotice(`Meeting created (ID ${created.id})${inviteNote}.`);
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Failed to create meeting"
+    );
+  } finally {
+    setBusy(false);
   }
+}
 
   async function onDelete(meetingId: string | number, meetingTopic: string) {
     const ok = window.confirm(
