@@ -11,6 +11,8 @@ import SessionPage from "./pages/SessionPage";
 import SettingsPage from "./pages/SettingsPage";
 import ZoomPage from "./pages/ZoomPage";
 import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
+import SupportPage from "./pages/SupportPage";
 
 export default function App() {
   return (
@@ -25,6 +27,8 @@ export default function App() {
           <Route path="/scheduled" element={<ZoomPage />} />
           <Route path="/start-transcription" element={<HomePage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/support" element={<SupportPage />} />
           <Route path="/completed" element={<CompletedPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
