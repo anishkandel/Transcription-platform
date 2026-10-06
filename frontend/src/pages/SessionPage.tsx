@@ -10,7 +10,7 @@ import {
 
 import {
   Session,
-  exportUrl,
+  downloadTranscript,
   getSession,
   getTranscript,
   bindZoomRtmsSession,
@@ -61,6 +61,24 @@ export default function SessionPage() {
   const [isLive, setIsLive] = useState(false);
 
   const seenSegments = useRef<Set<string>>(new Set());
+
+  const [exporting, setExporting] = useState(false);
+  const exportPending = useRef(false);
+
+  async function onExport(format: "txt" | "json" | "docx") {
+    if (!sessionId || !transcript.trim() || exportPending.current) return;
+    exportPending.current = true;
+    setExporting(true);
+    setError(null);
+    try {
+      await downloadTranscript(sessionId, format);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to download transcript");
+    } finally {
+      exportPending.current = false;
+      setExporting(false);
+    }
+  }
 
   const canExport = useMemo(
     () => transcript.trim().length > 0,
@@ -903,48 +921,18 @@ export default function SessionPage() {
             </h3>
 
             <div className="button-row">
-              <a
-                className={`secondary-button ${
-                  !canExport
-                    ? "disabled"
-                    : ""
-                }`}
-                href={exportUrl(
-                  sessionId,
-                  "txt"
-                )}
-              >
-                <Download size={14} />
-                TXT
-              </a>
-
-              <a
-                className={`secondary-button ${
-                  !canExport
-                    ? "disabled"
-                    : ""
-                }`}
-                href={exportUrl(
-                  sessionId,
-                  "json"
-                )}
-              >
-                JSON
-              </a>
-
-              <a
-                className={`secondary-button ${
-                  !canExport
-                    ? "disabled"
-                    : ""
-                }`}
-                href={exportUrl(
-                  sessionId,
-                  "docx"
-                )}
-              >
-                DOCX
-              </a>
+              {(["txt", "json", "docx"] as const).map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  className="secondary-button"
+                  disabled={!canExport || exporting}
+                  onClick={() => void onExport(format)}
+                >
+                  {format === "txt" && <Download size={14} />}
+                  {format.toUpperCase()}
+                </button>
+              ))}
             </div>
           </div>
         </aside>
