@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -12,12 +12,17 @@ import {
   Video,
 } from "lucide-react";
 
-import { Session, createSession, listSessions } from "../api";
+import { Session, createSession, listSessions, transcribeAudio } from "../api";
+
+import FileDropzone from "../components/FileDropzone";
 
 export default function HomePage() {
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState("Orahiri meeting transcription");
+  const [title, setTitle] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const pendingSession = useRef<Session | null>(null);
+  const submitting = useRef(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,21 +44,30 @@ export default function HomePage() {
   async function onCreate(event: FormEvent) {
     event.preventDefault();
 
+    if (!file || file.size === 0 || submitting.current) return;
+    submitting.current = true;
     setLoading(true);
     setError(null);
 
     try {
-      const session = await createSession(
-        title.trim() || "Untitled session",
+      const session = pendingSession.current || await createSession(
+        title.trim() || file.name.replace(/\.[^.]+$/, ""),
         "file"
       );
+      pendingSession.current = session;
+      const result = await transcribeAudio(session.id, file);
+      if (!result.success) {
+        throw new Error(result.detail || "Transcription failed. You can retry using the same session.");
+      }
+      pendingSession.current = null;
 
       navigate(`/sessions/${session.id}`);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to create session"
+        err instanceof Error ? err.message : "Failed to transcribe recording"
       );
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   }
@@ -63,80 +77,6 @@ export default function HomePage() {
 
       {/* =====================================================
           PAGE HEADER
-      ===================================================== */}
-
-      <section className="start-page-hero">
-        <div className="start-hero-content">
-          <div className="start-eyebrow">
-            <span className="start-eyebrow-dot" />
-            TRANSCRIPTION WORKSPACE
-          </div>
-
-          <h1>Start your transcription</h1>
-
-          <p>
-            Turn your meeting kōrero into clear, searchable transcripts.
-            Choose a new recording session or continue with Zoom.
-          </p>
-
-          <div className="start-hero-actions">
-            <button
-              className="start-primary-action"
-              type="button"
-              onClick={() =>
-                document
-                  .getElementById("new-session-card")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              <Mic size={17} />
-              Start a new session
-              <ArrowRight size={15} />
-            </button>
-
-            <Link to="/scheduled" className="start-secondary-action">
-              <Video size={16} />
-              Open Zoom
-            </Link>
-          </div>
-        </div>
-
-        <div className="start-hero-visual">
-          <div className="start-glow start-glow-one" />
-          <div className="start-glow start-glow-two" />
-
-          <div className="start-floating-card">
-            <div className="start-floating-icon">
-              <Mic size={25} />
-            </div>
-
-            <div>
-              <strong>Ready to kōrero</strong>
-              <span>Live transcription workspace</span>
-            </div>
-
-            <div className="start-live-indicator">
-              <span />
-              READY
-            </div>
-          </div>
-
-          <div className="start-wave">
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================================
-          OPTIONS
       ===================================================== */}
 
       <section className="start-options-section">
@@ -150,7 +90,7 @@ export default function HomePage() {
             <h2>Choose how you want to transcribe</h2>
 
             <p>
-              Start with a new session or connect to an upcoming Zoom meeting.
+              Upload a recording or transcribe a live Zoom meeting.
             </p>
           </div>
         </div>
@@ -175,14 +115,13 @@ export default function HomePage() {
             <div className="start-option-content">
               <div className="start-card-label">
                 <span className="start-status-dot" />
-                NEW SESSION
+                AUDIO RECORDING
               </div>
 
-              <h3>Create a transcription session</h3>
+              <h3>Upload a recording</h3>
 
               <p>
-                Create a new workspace for progressive transcription,
-                uploaded recordings, or testing.
+                Select your recording, then start transcription.
               </p>
 
               <div className="start-input-group">
@@ -194,18 +133,24 @@ export default function HomePage() {
                   id="session-title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter meeting title"
+                  placeholder="Optional recording title"
+                  disabled={loading || !!pendingSession.current}
                 />
               </div>
 
+              <FileDropzone
+                file={file}
+                onChange={setFile}
+                disabled={loading}
+              />
               <button
                 className="start-card-button start-card-button-primary"
                 type="submit"
-                disabled={loading}
+                disabled={loading || !file || file.size === 0}
               >
                 <Mic size={16} />
 
-                {loading ? "Creating session..." : "Create session"}
+                {loading ? "Transcribing..." : "Start transcription"}
 
                 {!loading && <ArrowRight size={15} />}
               </button>
@@ -321,7 +266,7 @@ export default function HomePage() {
               <h3>No sessions yet</h3>
 
               <p>
-                Create your first transcription session above to begin.
+                Upload a recording or open a Zoom meeting above to begin.
               </p>
 
               <button
@@ -334,7 +279,7 @@ export default function HomePage() {
                 }
               >
                 <Plus size={15} />
-                Create first session
+                Upload a recording
               </button>
             </div>
           </div>
