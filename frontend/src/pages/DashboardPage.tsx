@@ -720,7 +720,7 @@ export default function DashboardPage() {
         <div className="section-title">
           <div>
             <h2>
-              Recent transcripts
+              Recent sessions
             </h2>
 
             <p>
@@ -748,7 +748,7 @@ export default function DashboardPage() {
 
             <div>
               <h3>
-                No transcripts yet
+                No sessions yet
               </h3>
 
               <p>
