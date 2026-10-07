@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
+from datetime import datetime, timezone
 from app.config import Settings, get_settings
 from app.deps import get_current_user
 from app.schemas import ZoomMeetingCreate, ZoomMeetingUpdate, ZoomRTMSStartRequest
@@ -582,6 +582,64 @@ async def zoom_webhook(
     if not isinstance(payload, dict):
         payload = {}
     summary = summarize_webhook(str(event), payload)
+    if event == "meeting.ended":
+        meeting = payload.get("object", {})
+        if not isinstance(meeting, dict):
+            meeting = {}
+
+        meeting_id = str(meeting.get("id") or summary.get("meeting_id") or "")
+        session_id = _resolve_rtms_session_id(
+            db,
+            meeting_id=meeting_id or None,
+            meeting_uuid=meeting.get("uuid"),
+        )
+
+        record = db.get(SessionRecord, session_id) if session_id else None
+        if not record:
+            logger.warning(
+                "meeting.ended received but no session matched meeting_id=%s",
+                meeting_id,
+            )
+            return {"status": "received", "detail": "No matching session"}
+
+        start_value = meeting.get("start_time")
+        end_value = meeting.get("end_time")
+        if not start_value or not end_value:
+            logger.warning(
+                "meeting.ended missing start/end time meeting_id=%s",
+                meeting_id,
+            )
+            return {"status": "received", "detail": "Missing meeting timestamps"}
+
+        start_time = datetime.fromisoformat(
+            str(start_value).replace("Z", "+00:00")
+        )
+        end_time = datetime.fromisoformat(
+            str(end_value).replace("Z", "+00:00")
+        )
+
+        if start_time.tzinfo is None:
+            start_time = start_time.replace(tzinfo=timezone.utc)
+        if end_time.tzinfo is None:
+            end_time = end_time.replace(tzinfo=timezone.utc)
+
+        record.actual_duration_seconds = max(
+            0, int((end_time - start_time).total_seconds())
+        )
+        record.status = "completed"
+        db.commit()
+
+        logger.info(
+            "Meeting completed session_id=%s actual_duration_seconds=%s",
+            record.id,
+            record.actual_duration_seconds,
+        )
+        return {
+            "status": "received",
+            "detail": "meeting.ended handled",
+            "session_id": record.id,
+            "actual_duration_seconds": record.actual_duration_seconds,
+        }   
 
     if event == "meeting.started":
         detail = "meeting.started received"
