@@ -844,18 +844,29 @@ export default function SessionPage() {
             </strong>
           </div>
 
-          <div className="detail">
-            <span>Duration</span>
-
-           <strong>
-            {session.platform === "file"
-              ? formatAudioDuration(durationSeconds)
-              : formatMeetingDuration(
-                  session.duration_minutes
-                )}
-          </strong>
-          </div>
-          {session.platform === "zoom" ? (
+          {session.platform === "file" ? (
+            <div className="detail">
+                <span>Duration</span>
+                <strong>{formatAudioDuration(durationSeconds)}</strong>
+              </div>
+            ) : (
+              <>
+                <div className="detail">
+                  <span>Scheduled duration</span>
+                  <strong>{formatMeetingDuration(session.duration_minutes)}</strong>
+                </div>
+            
+                <div className="detail">
+                  <span>Actual RTMS duration</span>
+                  <strong>
+                    {session.actual_duration_seconds != null
+                      ? formatAudioDuration(session.actual_duration_seconds)
+                      : "Available when the meeting finishes"}
+                  </strong>
+                </div>
+              </>
+            )}
+            {session.platform === "zoom" ? (
             <div className="detail participants-detail">
               <span>Participants</span>
           
