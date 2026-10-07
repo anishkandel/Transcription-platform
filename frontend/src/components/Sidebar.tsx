@@ -136,7 +136,7 @@ export default function Sidebar() {
             <span className="nav-text">Meeting History</span>
           </Link>
 
-          <Link
+          {/* <Link
             to="/completed"
             className="nav-item nav-subtle-link"
           >
@@ -144,7 +144,7 @@ export default function Sidebar() {
               <Clock3 size={18} />
             </span>
             <span className="nav-text">Recent Activity</span>
-          </Link>
+          </Link> */}
         </div>
 
         <div className="nav-section">
