@@ -80,7 +80,7 @@ def _session_out(db: Session, record: SessionRecord) -> SessionOut:
         source=record.source,
         scheduled_start=record.scheduled_start,
         duration_minutes=record.duration_minutes,
-        actual_duration_seconds=actual_duration_seconds,
+        actual_duration_seconds=record.actual_duration_seconds,
         participants=json.loads(record.participants or "[]"),
         created_at=record.created_at,
         updated_at=record.updated_at,
