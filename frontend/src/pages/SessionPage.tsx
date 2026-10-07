@@ -761,7 +761,7 @@ export default function SessionPage() {
       ) : null}
 
       {!isCompleted &&
-      session.platform === "zoom" ? (
+      session.platform === "zoom" && !isLive ? (
         <div className="live-session-toolbar">
           <div>
             <strong>
@@ -782,7 +782,7 @@ export default function SessionPage() {
               void onLiveRtms()
             }
           >
-            Retry connection
+            Start RTMS manually
           </button>
         </div>
       ) : null}
