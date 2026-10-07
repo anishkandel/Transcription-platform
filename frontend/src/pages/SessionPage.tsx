@@ -143,23 +143,24 @@ export default function SessionPage() {
     let socket: WebSocket | null = null;
     let retryTimer: number | undefined;
 
-    const connect = () => {
-      socket = new WebSocket(wsUrl(sessionId));
-
-      socket.onopen = () => {
-        setLiveNote("WebSocket connected");
+ const connect = () => {
+      const currentSocket = new WebSocket(wsUrl(sessionId));
+      socket = currentSocket;
+    
+      currentSocket.onopen = () => {
+        setLiveNote("Connected. Waiting for Zoom audio…");
       };
-
-      socket.onclose = () => {
-        setLiveNote("WebSocket disconnected");
-
+    
+      currentSocket.onclose = () => {
+        setLiveNote("Connection interrupted. Reconnecting…");
+    
         if (!closedByEffect) {
           retryTimer = window.setTimeout(connect, 1500);
         }
       };
-
-      socket.onerror = () => {
-        setLiveNote("WebSocket connection error");
+    
+      currentSocket.onerror = () => {
+        setLiveNote("Connection issue. Retrying automatically…");
       };
 
       socket.onmessage = (event) => {
