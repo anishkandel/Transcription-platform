@@ -27,6 +27,7 @@ class SessionOut(BaseModel):
 
     scheduled_start: datetime | None = None
     duration_minutes: int | None = None
+    actual_duration_seconds: int | None = None
     participants: list[str] = Field(default_factory=list)
 
     created_at: datetime
