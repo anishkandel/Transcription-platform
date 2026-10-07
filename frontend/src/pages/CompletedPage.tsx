@@ -176,20 +176,10 @@ export default function CompletedPage() {
                       session.actual_duration_seconds != null && (
                         <span>
                           <Clock3 size={14} />
-                          Actual: {formatDuration(session.actual_duration_seconds)}
+                          duration: {formatDuration(session.actual_duration_seconds)}
                         </span>
                       )}
                   </div>
-                
-                  {session.platform === "zoom" &&
-                    session.actual_duration_seconds != null && (
-                      <span>
-                        <Clock3 size={14} />
-                        Actual: {formatDuration(session.actual_duration_seconds)}
-                      </span>
-                    )}
-                </div>
-
                 {/* Action */}
                 <div className="completed-session-action">
                   <Link
