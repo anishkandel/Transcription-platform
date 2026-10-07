@@ -7119,3 +7119,12 @@ a {
 .quick-start-section .transcription-option {
   min-height: 210px;
 }
+
+.quick-start-section .transcription-option {
+  min-height: 185px;
+}
+
+.quick-start-section .transcription-option-content p {
+  min-height: 0;
+  margin-bottom: 12px;
+}
