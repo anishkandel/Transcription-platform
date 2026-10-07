@@ -631,9 +631,13 @@ export default function SessionPage() {
               marginBottom: 2,
             }}
           >
-            {formatPlatform(session.platform)}
-            {" · "}
-            {formatProvider(provider)}
+           {formatPlatform(session.platform)}
+           {provider && provider !== "none" && (
+              <>
+                {" · "}
+                {formatProvider(provider)}
+              </>
+            )}
           </p>
 
           {session.participants &&
