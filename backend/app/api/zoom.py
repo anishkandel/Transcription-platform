@@ -2,7 +2,7 @@ from __future__ import annotations
 import json
 import logging
 from typing import Any
-from app.db import RtmsStreamRecord, SessionRecord, UserRecord, get_db
+from app.db import RtmsStreamRecord, SessionRecord, UserRecord, ZoomMeetingOwnerRecord, get_db
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import select
@@ -260,6 +260,7 @@ def zoom_me(
 
 
 @router.get("/meetings")
+@router.get("/meetings")
 def list_meetings(
     meeting_type: str = "upcoming",
     include_invited: bool = True,
@@ -269,9 +270,42 @@ def list_meetings(
 ) -> dict[str, Any]:
     try:
         client = _client(settings, db, user)
+
         if include_invited and meeting_type in {"upcoming", "combined"}:
-            return client.list_dashboard_meetings()
-        return client.list_meetings(meeting_type=meeting_type)
+            result = client.list_dashboard_meetings()
+        else:
+            result = client.list_meetings(meeting_type=meeting_type)
+
+        owned_ids = set(
+            db.scalars(
+                select(ZoomMeetingOwnerRecord.meeting_id).where(
+                    ZoomMeetingOwnerRecord.user_id == user.id
+                )
+            ).all()
+        )
+
+        meetings = [
+            meeting
+            for meeting in result.get("meetings", [])
+            if str(meeting.get("id") or "") in owned_ids
+        ]
+
+        result["meetings"] = meetings
+        result["total_records"] = len(meetings)
+
+        if "hosted_count" in result:
+            result["hosted_count"] = sum(
+                meeting.get("source") == "hosted"
+                for meeting in meetings
+            )
+
+        if "invited_count" in result:
+            result["invited_count"] = sum(
+                meeting.get("source") == "invited"
+                for meeting in meetings
+            )
+
+        return result
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -306,9 +340,29 @@ def create_meeting(
         }
 
     try:
-        return _client(settings, db, user).create_meeting(body)
+        meeting = _client(settings, db, user).create_meeting(body)
+
+        meeting_id = meeting.get("id") or meeting.get("meeting_id")
+        if meeting_id is not None:
+            meeting_id = str(meeting_id)
+            owner = db.get(ZoomMeetingOwnerRecord, meeting_id)
+
+            if owner is None:
+                db.add(
+                    ZoomMeetingOwnerRecord(
+                        meeting_id=meeting_id,
+                        user_id=user.id,
+                    )
+                )
+                db.commit()
+
+        return meeting
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
 
 
 @router.get("/meetings/{meeting_id}")
