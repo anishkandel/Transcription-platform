@@ -475,11 +475,13 @@ export default function DashboardPage() {
                 to="/scheduled"
                 className="option-action primary-button"
               >
-                <Mic size={15} />
-
-                Start transcription
-
-                <ArrowRight size={14} />
+                {zoomConnected ? (
+                  <Mic size={15} />
+                ) : (
+                  <Video size={15} />
+                )}
+                
+                {zoomConnected ? "Choose a meeting" : "Connect Zoom"}
               </Link>
             </div>
           </div>
