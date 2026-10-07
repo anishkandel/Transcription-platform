@@ -173,13 +173,11 @@ export default function CompletedPage() {
                     </span>
                     <span>
                       {session.platform === "zoom" && (
-                        <div className="completed-session-duration">
                           {session.actual_duration_seconds != null && (
                             <span>
-                              Actual: {formatDuration(session.actual_duration_seconds)}
+                              duration: {formatDuration(session.actual_duration_seconds)}
                             </span>
                           )}
-                        </div>
                 )}
                     </span>
                   </div>
