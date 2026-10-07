@@ -163,15 +163,15 @@ export default function SessionPage() {
         setLiveNote("Connection issue. Retrying automatically…");
       };
 
-      socket.onmessage = (event) => {
+      currentSocket.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
 
-         socket.onopen = () => {
+         currentSocket.onopen = () => {
             setLiveNote("Connected. Waiting for Zoom audio…");
           };
           
-          socket.onclose = () => {
+          currentSocket.onclose = () => {
             setLiveNote("Connection interrupted. Reconnecting…");
           
             if (!closedByEffect) {
@@ -179,7 +179,7 @@ export default function SessionPage() {
             }
           };
           
-          socket.onerror = () => {
+          currentSocket.onerror = () => {
             setLiveNote("Connection issue. Retrying automatically…");
           };
 
