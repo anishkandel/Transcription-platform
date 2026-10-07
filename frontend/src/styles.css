@@ -7065,3 +7065,49 @@ a {
   background: #f8faf9;
   border-radius: 6px;
 }
+
+.live-session-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 0 0 18px;
+  padding: 16px 20px;
+  border: 1px solid #dfeae7;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.live-session-toolbar > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.live-session-toolbar strong {
+  color: #17312f;
+  font-size: 14px;
+}
+
+.live-session-toolbar span {
+  color: #72817d;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.live-session-toolbar .secondary-button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .live-session-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .live-session-toolbar .secondary-button {
+    width: 100%;
+  }
+}
