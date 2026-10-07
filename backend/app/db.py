@@ -60,6 +60,10 @@ class SessionRecord(Base):
         Integer,
         nullable=True,
     )
+    actual_duration_seconds: Mapped[int | None] = mapped_column(
+    Integer,
+    nullable=True,
+    )
     
     participants: Mapped[str | None] = mapped_column(
         Text,
