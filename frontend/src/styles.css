@@ -7111,3 +7111,7 @@ a {
     width: 100%;
   }
 }
+
+.quick-start-section .transcription-option {
+  min-height: 210px;
+}
