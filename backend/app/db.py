@@ -122,7 +122,24 @@ class ZoomTokenRecord(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
+class ZoomMeetingOwnerRecord(Base):
+    __tablename__ = "zoom_meeting_owners"
 
+    meeting_id: Mapped[str] = mapped_column(
+        String(128),
+        primary_key=True,
+    )
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    
 class RtmsStreamRecord(Base):
     __tablename__ = "rtms_streams"
 
