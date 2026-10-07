@@ -171,18 +171,19 @@ export default function CompletedPage() {
                       <FileText size={14} />
                       {session.platform}
                     </span>
+                    <span>
+                      {session.platform === "zoom" && (
+                        <div className="completed-session-duration">
+                          {session.actual_duration_seconds != null && (
+                            <span>
+                              Actual: {formatDuration(session.actual_duration_seconds)}
+                            </span>
+                          )}
+                        </div>
+                )}
+                    </span>
                   </div>
                 </div>
-                
-                {session.platform === "zoom" && (
-                  <div className="completed-session-duration">
-                    {session.actual_duration_seconds != null && (
-                      <span>
-                        Actual: {formatDuration(session.actual_duration_seconds)}
-                      </span>
-                    )}
-                  </div>
-                )}
 
                 {/* Action */}
                 <div className="completed-session-action">
