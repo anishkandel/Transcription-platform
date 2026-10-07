@@ -9,6 +9,22 @@ import {
 } from "lucide-react";
 import { Session, listSessions } from "../api";
 
+function formatDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (minutes < 60) {
+    return minutes > 0
+      ? `${minutes} min ${remainingSeconds} sec`
+      : `${remainingSeconds} sec`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  return `${hours} hr ${remainingMinutes} min ${remainingSeconds} sec`;
+}
+
 export default function CompletedPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
 
@@ -157,6 +173,21 @@ export default function CompletedPage() {
                     </span>
                   </div>
                 </div>
+                {session.platform === "zoom" && (
+                  <div className="completed-session-duration">
+                    {session.duration_minutes != null && (
+                      <span>
+                        Scheduled: {formatDuration(session.duration_minutes * 60)}
+                      </span>
+                    )}
+                
+                    {session.actual_duration_seconds != null && (
+                      <span>
+                        Actual: {formatDuration(session.actual_duration_seconds)}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Action */}
                 <div className="completed-session-action">
