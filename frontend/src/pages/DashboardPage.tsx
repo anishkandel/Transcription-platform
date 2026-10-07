@@ -694,6 +694,15 @@ export default function DashboardPage() {
                       ? "Invited meeting"
                       : "You host"
                   }
+                  actionLabel={
+                    sessions.some(
+                      (session) =>
+                        session.platform === "zoom" &&
+                        String(session.meeting_id) === String(meeting.id)
+                    )
+                      ? "Open session"
+                      : "Create session"
+                  }
 
                   disabled={creating}
 
@@ -900,6 +909,7 @@ function MeetingCard({
   time,
   duration,
   participants,
+  actionLabel,
   onOpen,
   disabled,
 }: {
@@ -908,6 +918,7 @@ function MeetingCard({
   time: string;
   duration: string;
   participants: string;
+  actionLabel: string;
   onOpen: () => void;
   disabled?: boolean;
 }) {
@@ -962,9 +973,7 @@ function MeetingCard({
           onClick={onOpen}
           disabled={disabled}
         >
-          {disabled
-            ? "Opening..."
-            : "Open"}
+          {disabled ? "Opening..." : actionLabel}
 
           {!disabled && (
             <ArrowRight size={13} />
