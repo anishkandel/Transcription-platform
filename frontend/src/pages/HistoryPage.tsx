@@ -303,27 +303,26 @@ export default function HistoryPage() {
 
                   <h3>{session.title}</h3>
 
-                  <div className="history-card-details">
-                    <span>
-                      <Clock3 size={13} />
-                      {new Date(session.updated_at).toLocaleString()}
-                    </span>
-
-                    <span>
-                      <FileText size={13} />
-                      {session.platform}
-                    </span>
-                  </div>
-                  {completed && session.platform === "zoom" && (
-                  <div className="history-card-duration">
-                    {session.actual_duration_seconds != null && (
+                <div className="history-card-details">
+                  <span>
+                    <Clock3 size={13} />
+                    {new Date(session.updated_at).toLocaleString()}
+                  </span>
+                
+                  <span>
+                    <FileText size={13} />
+                    {session.platform}
+                  </span>
+                
+                  {completed &&
+                    session.platform === "zoom" &&
+                    session.actual_duration_seconds != null && (
                       <span>
+                        <Clock3 size={13} />
                         Actual: {formatDuration(session.actual_duration_seconds)}
                       </span>
                     )}
-                  </div>
-                )}
-
+                </div>
                   <div className="history-card-meta">
                     <span className="history-source">
                       {session.source || "manual"}
