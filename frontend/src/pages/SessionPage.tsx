@@ -166,9 +166,21 @@ export default function SessionPage() {
         try {
           const message = JSON.parse(event.data);
 
-          if (message.type) {
-            setLiveNote(`Event: ${message.type}`);
-          }
+         socket.onopen = () => {
+            setLiveNote("Connected. Waiting for Zoom audio…");
+          };
+          
+          socket.onclose = () => {
+            setLiveNote("Connection interrupted. Reconnecting…");
+          
+            if (!closedByEffect) {
+              retryTimer = window.setTimeout(connect, 1500);
+            }
+          };
+          
+          socket.onerror = () => {
+            setLiveNote("Connection issue. Retrying automatically…");
+          };
 
           if (message.provider) {
             setProvider(message.provider);
