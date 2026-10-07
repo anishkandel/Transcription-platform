@@ -7128,3 +7128,8 @@ a {
   min-height: 0;
   margin-bottom: 12px;
 }
+
+.quick-start-section .option-top {
+  justify-content: flex-start;
+  gap: 10px;
+}
