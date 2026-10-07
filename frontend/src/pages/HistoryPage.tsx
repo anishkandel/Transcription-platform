@@ -12,6 +12,22 @@ import {
 } from "lucide-react";
 import { Session, listSessions } from "../api";
 
+function formatDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (minutes < 60) {
+    return minutes > 0
+      ? `${minutes} min ${remainingSeconds} sec`
+      : `${remainingSeconds} sec`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  return `${hours} hr ${remainingMinutes} min ${remainingSeconds} sec`;
+}
+
 export default function HistoryPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [filter, setFilter] = useState<"all" | "completed" | "active">("all");
@@ -298,6 +314,15 @@ export default function HistoryPage() {
                       {session.platform}
                     </span>
                   </div>
+                  {completed && session.platform === "zoom" && (
+                  <div className="history-card-duration">
+                    {session.actual_duration_seconds != null && (
+                      <span>
+                        Actual: {formatDuration(session.actual_duration_seconds)}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                   <div className="history-card-meta">
                     <span className="history-source">
