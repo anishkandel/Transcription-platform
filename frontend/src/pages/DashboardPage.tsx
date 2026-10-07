@@ -841,13 +841,17 @@ function StatCard({
 }) {
   const content = (
     <>
-      <div className="stat-card-top">
+     <div className="stat-card-top">
+        <div className="stat-icon">
+          {icon}
+        </div>
+      
         {live && (
-        <span className="stat-live">
-          <span />
-          LIVE
-        </span>
-)}
+          <span className="stat-live">
+            <span />
+            LIVE
+          </span>
+        )}
       </div>
 
       <div className="stat-card-info">
