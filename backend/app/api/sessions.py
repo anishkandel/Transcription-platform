@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
-from app.db import TranscriptRecord, SessionRecord, UserRecord, get_db
+from app.db import TranscriptRecord, SessionRecord, RtmsStreamRecord, UserRecord, get_db
 from app.deps import get_current_user
 from app.schemas import (
     MockRtmsStartResponse,
@@ -38,7 +38,38 @@ def _get_owned_session(db: Session, session_id: str, user: UserRecord) -> Sessio
     return record
 
 
-def _session_out(record: SessionRecord) -> SessionOut:
+def _session_out(db: Session, record: SessionRecord) -> SessionOut:
+    actual_duration_seconds = None
+
+    if record.status == "completed":
+        streams = db.scalars(
+            select(RtmsStreamRecord).where(
+                RtmsStreamRecord.session_id == record.id,
+                RtmsStreamRecord.mode == "live",
+                RtmsStreamRecord.status == "stopped",
+                RtmsStreamRecord.stopped_at.is_not(None),
+            )
+        ).all()
+
+        valid_streams = [
+            stream
+            for stream in streams
+            if stream.created_at
+            and stream.stopped_at
+            and stream.stopped_at >= stream.created_at
+        ]
+
+        if valid_streams:
+            first_started = min(
+                stream.created_at for stream in valid_streams
+            )
+            last_stopped = max(
+                stream.stopped_at for stream in valid_streams
+            )
+            actual_duration_seconds = int(
+                (last_stopped - first_started).total_seconds()
+            )
+
     return SessionOut(
         id=record.id,
         user_id=record.user_id,
@@ -49,6 +80,7 @@ def _session_out(record: SessionRecord) -> SessionOut:
         source=record.source,
         scheduled_start=record.scheduled_start,
         duration_minutes=record.duration_minutes,
+        actual_duration_seconds=actual_duration_seconds,
         participants=json.loads(record.participants or "[]"),
         created_at=record.created_at,
         updated_at=record.updated_at,
@@ -170,7 +202,7 @@ def create_session(
     db.commit()
     db.refresh(record)
 
-    return _session_out(record)
+    return _session_out(db, record)
 
 
 @router.get("", response_model=list[SessionOut])
@@ -186,7 +218,7 @@ def list_sessions(
         )
     )
 
-    return [_session_out(record) for record in records]
+    return [_session_out(db, record) for record in records]
 
 
 @router.get("/{session_id}", response_model=SessionOut)
@@ -197,7 +229,7 @@ def get_session(
 ) -> SessionOut:
     record = _get_owned_session(db, session_id, user)
 
-    return _session_out(record)
+    return _session_out(db, record)
 
 
 @router.post("/{session_id}/stop", response_model=SessionOut)
