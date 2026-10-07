@@ -842,22 +842,12 @@ function StatCard({
   const content = (
     <>
       <div className="stat-card-top">
-        <div className="stat-icon">
-          {icon}
-        </div>
-
-        {live ? (
-          <span className="stat-live">
-            <span />
-
-            LIVE
-          </span>
-        ) : (
-          <Clock3
-            size={14}
-            className="stat-clock"
-          />
-        )}
+        {live && (
+        <span className="stat-live">
+          <span />
+          LIVE
+        </span>
+)}
       </div>
 
       <div className="stat-card-info">
