@@ -1,16 +1,14 @@
 from __future__ import annotations
-
 import json
 import logging
 from typing import Any
-
+from app.db import RtmsStreamRecord, SessionRecord, UserRecord, get_db
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
-from app.db import SessionRecord, UserRecord, get_db
 from app.deps import get_current_user
 from app.schemas import ZoomMeetingCreate, ZoomMeetingUpdate, ZoomRTMSStartRequest
 from app.services.auth_service import AuthError, create_oauth_state, parse_oauth_state
@@ -91,6 +89,45 @@ def _resolve_rtms_session_id(
     if session_id:
         return session_id
 
+    stream_record = None
+
+    if rtms_stream_id:
+        stream_record = db.scalars(
+            select(RtmsStreamRecord)
+            .where(
+                RtmsStreamRecord.rtms_stream_id == str(rtms_stream_id),
+                RtmsStreamRecord.session_id.is_not(None),
+            )
+            .order_by(RtmsStreamRecord.id.desc())
+        ).first()
+
+    if stream_record is None and meeting_uuid:
+        stream_record = db.scalars(
+            select(RtmsStreamRecord)
+            .where(
+                RtmsStreamRecord.meeting_uuid == str(meeting_uuid),
+                RtmsStreamRecord.session_id.is_not(None),
+            )
+            .order_by(RtmsStreamRecord.id.desc())
+        ).first()
+
+    if stream_record and stream_record.session_id:
+        rtms_session_registry.bind(
+            stream_record.session_id,
+            meeting_id=str(meeting_id or stream_record.meeting_id),
+            meeting_uuid=(
+                str(meeting_uuid or stream_record.meeting_uuid)
+                if meeting_uuid or stream_record.meeting_uuid
+                else None
+            ),
+            rtms_stream_id=(
+                str(rtms_stream_id)
+                if rtms_stream_id
+                else stream_record.rtms_stream_id
+            ),
+        )
+        return stream_record.session_id
+
     if not meeting_id:
         return None
 
@@ -111,7 +148,6 @@ def _resolve_rtms_session_id(
     )
 
     return record.id
-
 
 @router.get("/oauth/start")
 def zoom_oauth_start(
@@ -326,27 +362,51 @@ def bind_rtms_session(
     """Bind an app session to a Zoom meeting so auto RTMS can push transcripts."""
     if not payload.session_id:
         raise HTTPException(status_code=400, detail="session_id is required")
+
     record = db.get(SessionRecord, payload.session_id)
     if not record or record.user_id != user.id:
         raise HTTPException(status_code=404, detail="Session not found")
+
     record.meeting_id = str(meeting_id)
     record.platform = "zoom"
     record.source = "zoom"
-    if record.status != "completed":
+
+    if record.status == "created":
         record.status = "waiting_rtms"
+
+    stream_records = db.scalars(
+        select(RtmsStreamRecord).where(
+            RtmsStreamRecord.meeting_id == str(meeting_id)
+        )
+    ).all()
+
+    for stream in stream_records:
+        stream.session_id = record.id
+        rtms_session_registry.bind(
+            record.id,
+            meeting_id=str(meeting_id),
+            meeting_uuid=stream.meeting_uuid,
+            rtms_stream_id=stream.rtms_stream_id,
+        )
+
     db.commit()
-    rtms_session_registry.bind(payload.session_id, meeting_id=str(meeting_id))
+
+    rtms_session_registry.bind(
+        record.id,
+        meeting_id=str(meeting_id),
+    )
+
     print(
         f"[zoom-rtms] bound session={payload.session_id} meeting_id={meeting_id}",
         flush=True,
     )
+
     return {
         "meeting_id": str(meeting_id),
         "session_id": payload.session_id,
         "status": "bound",
         "note": "Start/join the Zoom meeting. Transcripts appear when RTMS auto-starts.",
     }
-
 
 @router.post("/meetings/{meeting_id}/rtms/start")
 async def start_rtms(
