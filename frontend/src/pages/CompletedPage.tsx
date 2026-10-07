@@ -159,18 +159,27 @@ export default function CompletedPage() {
 
                   <h3>{session.title}</h3>
 
-                  <div className="completed-session-details">
-                  <span>
-                    <Clock3 size={14} />
-                    {session.scheduled_start
-                      ? new Date(session.scheduled_start).toLocaleString()
-                      : new Date(session.updated_at).toLocaleString()}
-                  </span>
-                
-                  <span>
-                    <FileText size={14} />
-                    {session.platform}
-                  </span>
+                <div className="completed-session-details">
+                    <span>
+                      <Clock3 size={14} />
+                      {session.scheduled_start
+                        ? new Date(session.scheduled_start).toLocaleString()
+                        : new Date(session.updated_at).toLocaleString()}
+                    </span>
+                  
+                    <span>
+                      <FileText size={14} />
+                      {session.platform}
+                    </span>
+                  
+                    {session.platform === "zoom" &&
+                      session.actual_duration_seconds != null && (
+                        <span>
+                          <Clock3 size={14} />
+                          Actual: {formatDuration(session.actual_duration_seconds)}
+                        </span>
+                      )}
+                  </div>
                 
                   {session.platform === "zoom" &&
                     session.actual_duration_seconds != null && (
