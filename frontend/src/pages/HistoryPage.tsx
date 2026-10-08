@@ -302,8 +302,7 @@ export default function HistoryPage() {
                   </div>
 
                  <h3>{session.title}</h3>
-
-                 <div className="history-card-details">
+                <div className="history-card-details">
                   <span>
                     <Clock3 size={13} />
                     {new Date(session.updated_at).toLocaleString()}
@@ -319,10 +318,10 @@ export default function HistoryPage() {
                     session.actual_duration_seconds != null && (
                       <span>
                         <Clock3 size={13} />
-                        duration: {formatDuration(session.actual_duration_seconds)}
+                        Duration: {formatDuration(session.actual_duration_seconds)}
                       </span>
-                    )} </div>
-                
+                    )}
+                </div> 
                   <div className="history-card-meta">
                     <span className="history-source">
                       {session.source || "manual"}
