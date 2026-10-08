@@ -206,6 +206,26 @@ export async function listSessions(): Promise<Session[]> {
   return response.json();
 }
 
+export async function listSessionsWithAudioDurations(): Promise<Session[]> {
+  const sessions = await listSessions();
+
+  return Promise.all(
+    sessions.map(async (session) => {
+      if (session.platform !== "file") return session;
+
+      try {
+        const transcript = await getTranscript(session.id);
+        return {
+          ...session,
+          audio_duration_seconds: transcript.duration_seconds ?? null,
+        };
+      } catch {
+        return { ...session, audio_duration_seconds: null };
+      }
+    })
+  );
+}
+
 export async function getSession(
   sessionId: string
 ): Promise<Session> {
