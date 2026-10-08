@@ -179,7 +179,7 @@ export default function CompletedPage() {
                              {formatDuration(session.actual_duration_seconds)}
                           </span>
                         )}
-                    {session.platform === "file" && session.duration_seconds != null && (
+                    {session.platform === "file" && session.audio_duration_seconds != null && (
                       <span>
                         <Clock3 size={14} />
                          {formatDuration(session.audio_duration_seconds)}
