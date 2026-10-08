@@ -176,9 +176,15 @@ export default function CompletedPage() {
                         session.actual_duration_seconds != null && (
                           <span>
                             <Clock3 size={14} />
-                            duration: {formatDuration(session.actual_duration_seconds)}
+                             {formatDuration(session.actual_duration_seconds)}
                           </span>
                         )}
+                    {session.platform === "file" && session.duration_seconds != null && (
+                      <span>
+                        <Clock3 size={14} />
+                         {formatDuration(session.duration_seconds)}
+                      </span>
+                    )}
                   </div>
                 </div>
                 {/* Action */}
