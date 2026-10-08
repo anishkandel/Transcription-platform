@@ -319,7 +319,7 @@ export default function HistoryPage() {
                     session.actual_duration_seconds != null && (
                       <span>
                         <Clock3 size={13} />
-                        Actual: {formatDuration(session.actual_duration_seconds)}
+                        duration: {formatDuration(session.actual_duration_seconds)}
                       </span>
                     )}
                 </div>
