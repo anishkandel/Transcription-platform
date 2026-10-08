@@ -13,6 +13,8 @@ import {
 import { Session, listSessionsWithAudioDurations} from "../api";
 
 function formatDuration(seconds: number): string {
+  seconds = Math.round(seconds);
+
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
 
