@@ -143,7 +143,7 @@ export default function CompletedPage() {
                 <div className="completed-session-number">
                   <span>{String(index + 1).padStart(2, "0")}</span>
                 </div>
-
+            
                 {/* Main information */}
                 <div className="completed-session-main">
                   <div className="completed-session-topline">
@@ -158,28 +158,29 @@ export default function CompletedPage() {
                   </div>
 
                   <h3>{session.title}</h3>
-
-                <div className="completed-session-details">
-                    <span>
-                      <Clock3 size={14} />
-                      {session.scheduled_start
-                        ? new Date(session.scheduled_start).toLocaleString()
-                        : new Date(session.updated_at).toLocaleString()}
-                    </span>
-                  
-                    <span>
-                      <FileText size={14} />
-                      {session.platform}
-                    </span>
-                  
-                    {session.platform === "zoom" &&
-                      session.actual_duration_seconds != null && (
-                        <span>
-                          <Clock3 size={14} />
-                          duration: {formatDuration(session.actual_duration_seconds)}
-                        </span>
-                      )}
+  
+                  <div className="completed-session-details">
+                      <span>
+                        <Clock3 size={14} />
+                        {session.scheduled_start
+                          ? new Date(session.scheduled_start).toLocaleString()
+                          : new Date(session.updated_at).toLocaleString()}
+                      </span>
+                    
+                      <span>
+                        <FileText size={14} />
+                        {session.platform}
+                      </span>
+                    
+                      {session.platform === "zoom" &&
+                        session.actual_duration_seconds != null && (
+                          <span>
+                            <Clock3 size={14} />
+                            duration: {formatDuration(session.actual_duration_seconds)}
+                          </span>
+                        )}
                   </div>
+                </div>
                 {/* Action */}
                 <div className="completed-session-action">
                   <Link
