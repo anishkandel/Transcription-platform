@@ -10,7 +10,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import { Session, listSessions } from "../api";
+import { Session, listSessionsWithAudioDurations} from "../api";
 
 function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
@@ -34,7 +34,7 @@ export default function HistoryPage() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    void listSessions().then(setSessions);
+    void listSessionsWithAudioDurations().then(setSessions);
   }, []);
 
   const filtered = useMemo(() => {
@@ -325,7 +325,7 @@ export default function HistoryPage() {
                   {session.platform === "file" && session.duration_seconds != null && (
                     <span>
                       <Clock3 size={14} />
-                      Audio duration: {formatDuration(session.duration_seconds)}
+                       {formatDuration(session.audio_duration_seconds)}
                     </span>
                   )}
                 </div> 
