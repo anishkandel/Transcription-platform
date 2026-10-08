@@ -7,7 +7,7 @@ import {
   FileText,
   Sparkles,
 } from "lucide-react";
-import { Session, listSessions } from "../api";
+import { Session, listSessionsWithAudioDurations} from "../api";
 
 function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
@@ -29,7 +29,7 @@ export default function CompletedPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
 
   useEffect(() => {
-    void listSessions().then((items) =>
+    void listSessionsWithAudioDurations().then((items) =>
       setSessions(items.filter((item) => item.status === "completed"))
     );
   }, []);
@@ -182,7 +182,7 @@ export default function CompletedPage() {
                     {session.platform === "file" && session.duration_seconds != null && (
                       <span>
                         <Clock3 size={14} />
-                         {formatDuration(session.duration_seconds)}
+                         {formatDuration(session.audio_duration_seconds)}
                       </span>
                     )}
                   </div>
