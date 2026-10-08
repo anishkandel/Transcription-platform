@@ -857,7 +857,7 @@ export default function SessionPage() {
                 </div>
             
                 <div className="detail">
-                  <span>Actual RTMS duration</span>
+                  <span>Meeting Duration</span>
                   <strong>
                     {session.actual_duration_seconds != null
                       ? formatAudioDuration(session.actual_duration_seconds)
