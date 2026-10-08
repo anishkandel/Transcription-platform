@@ -318,9 +318,16 @@ export default function HistoryPage() {
                     session.actual_duration_seconds != null && (
                       <span>
                         <Clock3 size={13} />
-                        duration: {formatDuration(session.actual_duration_seconds)}
+                        {formatDuration(session.actual_duration_seconds)}
                       </span>
                     )}
+
+                  {session.platform === "file" && session.duration_seconds != null && (
+                    <span>
+                      <Clock3 size={14} />
+                      Audio duration: {formatDuration(session.duration_seconds)}
+                    </span>
+                  )}
                 </div> 
                   <div className="history-card-meta">
                     <span className="history-source">
