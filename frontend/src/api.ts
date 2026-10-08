@@ -73,6 +73,7 @@ export type Session = {
   scheduled_start?: string | null;
   duration_minutes?: number | null;
   actual_duration_seconds?: number | null;
+  audio_duration_seconds?: number | null;
   participants?: string[];
   created_at: string;
   updated_at: string;
